@@ -124,8 +124,8 @@ cat > .claude-plugin/plugin.json <<'EOF'
     "name": "Your Name",
     "email": "your.email@example.com"
   },
-  "homepage": "https://github.com/yourusername/autopilot",
-  "repository": "https://github.com/yourusername/autopilot",
+  "homepage": "https://github.com/mylukin/autopilot",
+  "repository": "https://github.com/mylukin/autopilot",
   "license": "MIT",
   "keywords": [
     "autonomous",

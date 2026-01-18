@@ -608,7 +608,7 @@ Run tests: \`npm test\` (or project-specific command)
 
 ---
 
-🤖 Generated with [Autopilot](https://github.com/yourusername/autopilot) for Claude Code
+🤖 Generated with [Autopilot](https://github.com/mylukin/autopilot) for Claude Code
 EOF
 }
 ```

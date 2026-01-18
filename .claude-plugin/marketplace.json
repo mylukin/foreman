@@ -31,9 +31,9 @@
     "amount": 0
   },
   "support": {
-    "documentation": "https://github.com/yourusername/autopilot/blob/main/README.md",
-    "issues": "https://github.com/yourusername/autopilot/issues",
-    "discussions": "https://github.com/yourusername/autopilot/discussions"
+    "documentation": "https://github.com/mylukin/autopilot/blob/main/README.md",
+    "issues": "https://github.com/mylukin/autopilot/issues",
+    "discussions": "https://github.com/mylukin/autopilot/discussions"
   },
   "changelog": {
     "2.0.0": {

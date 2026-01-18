@@ -250,7 +250,7 @@ phase: deliver
 status: success
 commit_hash: abc123f
 pr_number: 456
-pr_url: https://github.com/user/repo/pull/456
+pr_url: https://github.com/mylukin/autopilot/pull/456
 stats:
   completed: 15
   total: 15
@@ -272,7 +272,7 @@ stats:
 │ Commit:      abc123f "feat: Add feature"    │
 │ Branch:      feature/task-management        │
 │ PR:          #456 (ready for review)        │
-│ URL:         github.com/user/repo/pull/456  │
+│ URL:         github.com/mylukin/autopilot/pull/456  │
 ├──────────────────────────────────────────────┤
 │ 📊 Statistics                                │
 ├──────────────────────────────────────────────┤
@@ -284,7 +284,7 @@ stats:
 └──────────────────────────────────────────────┘
 
 Next steps:
-1. Review PR: github.com/user/repo/pull/456
+1. Review PR: github.com/mylukin/autopilot/pull/456
 2. Merge when approved
 3. Deploy to production
 

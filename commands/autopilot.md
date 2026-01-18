@@ -163,7 +163,7 @@ Approve? (yes/no/modify)
 🚀 DELIVERY COMPLETE
    Commit: abc123f "feat: Add task management"
    PR: #123 (ready for review)
-   URL: github.com/user/repo/pull/123
+   URL: github.com/mylukin/autopilot/pull/123
 ```
 
 ---
@@ -181,7 +181,7 @@ Approve? (yes/no/modify)
 │ Commit:      abc123f "feat: Add feature"    │
 │ Branch:      feature/task-management        │
 │ PR:          #456 (ready for review)        │
-│ URL:         github.com/user/repo/pull/456  │
+│ URL:         github.com/mylukin/autopilot/pull/456  │
 ├──────────────────────────────────────────────┤
 │ 📊 Statistics                                │
 ├──────────────────────────────────────────────┤
@@ -193,7 +193,7 @@ Approve? (yes/no/modify)
 └──────────────────────────────────────────────┘
 
 Next steps:
-1. Review PR: github.com/user/repo/pull/456
+1. Review PR: github.com/mylukin/autopilot/pull/456
 2. Merge when approved
 3. Deploy to production
 

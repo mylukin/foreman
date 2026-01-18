@@ -257,8 +257,8 @@ MIT License - 查看 LICENSE 文件
 ## 支持
 
 - 📖 文档: [docs/](docs/)
-- 🐛 问题: [GitHub Issues](https://github.com/yourusername/autopilot/issues)
-- 💬 讨论: [GitHub Discussions](https://github.com/yourusername/autopilot/discussions)
+- 🐛 问题: [GitHub Issues](https://github.com/mylukin/autopilot/issues)
+- 💬 讨论: [GitHub Discussions](https://github.com/mylukin/autopilot/discussions)
 
 ---
 

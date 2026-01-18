@@ -33,7 +33,7 @@ Into this:
 
 ```bash
 cd ~/Projects
-git clone https://github.com/yourusername/autopilot
+git clone https://github.com/mylukin/autopilot
 cd autopilot
 ```
 
@@ -184,7 +184,7 @@ Sit back and watch:
 │ Commit:      a1b2c3d "feat: Add todo app"   │
 │ Branch:      feature/todo-app               │
 │ PR:          #456 (ready for review)        │
-│ URL:         github.com/user/repo/pull/456  │
+│ URL:         github.com/mylukin/autopilot/pull/456  │
 ├──────────────────────────────────────────────┤
 │ 📊 Statistics                                │
 ├──────────────────────────────────────────────┤
@@ -196,7 +196,7 @@ Sit back and watch:
 └──────────────────────────────────────────────┘
 
 Next steps:
-1. Review PR: github.com/user/repo/pull/456
+1. Review PR: github.com/mylukin/autopilot/pull/456
 2. Merge when approved
 3. Deploy to production
 

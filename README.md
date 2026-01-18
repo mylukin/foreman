@@ -37,7 +37,7 @@ Autopilot 是一个用于 Claude Code 的自主端到端开发系统，能够将
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/autopilot
+git clone https://github.com/mylukin/autopilot
 cd autopilot
 
 # Build CLI tool
@@ -298,8 +298,8 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md)
 ## Support | 支持
 
 - 📖 Documentation: [docs/](docs/)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/autopilot/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/autopilot/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/mylukin/autopilot/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/mylukin/autopilot/discussions)
 
 ---
 
