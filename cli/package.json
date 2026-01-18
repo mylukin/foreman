@@ -1,6 +1,6 @@
 {
   "name": "@skillstore/foreman",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "CLI tool for Foreman - efficient operations for AI agents",
   "main": "dist/index.js",
   "bin": {
