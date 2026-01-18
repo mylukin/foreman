@@ -20,8 +20,5 @@
     "task-management",
     "workflow",
     "pr-automation"
-  ],
-  "commands": "./commands/",
-  "agents": "./agents/",
-  "skills": "./skills/"
+  ]
 }
