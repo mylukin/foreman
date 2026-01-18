@@ -16,7 +16,7 @@
   "plugins": [
     {
       "name": "foreman",
-      "source": ".",
+      "source": "./",
       "description": "Autonomous end-to-end development system - from requirement to production-ready code with zero manual intervention",
       "version": "2.1.0",
       "author": {
