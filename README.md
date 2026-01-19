@@ -136,9 +136,8 @@ ralph-dev/
 │   ├── phase-2-breakdown/    # Task decomposition
 │   ├── phase-3-implement/    # Implementation loop
 │   ├── phase-4-heal/         # Error recovery
-│   └── phase-5-deliver/      # Quality gates + PR creation
-├── agents/
-│   └── language-detector.md  # AI-based language detection
+│   ├── phase-5-deliver/      # Quality gates + PR creation
+│   └── detect-language/      # AI-based language detection
 ├── commands/
 │   └── ralph-dev.md          # Main /ralph-dev command
 └── shared/

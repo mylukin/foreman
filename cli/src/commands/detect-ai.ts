@@ -6,7 +6,7 @@ import { IndexManager } from '../core/index-manager';
 
 /**
  * AI-powered language detection command
- * Spawns language-detector agent for autonomous detection
+ * Invokes detect-language skill for autonomous detection
  */
 export function registerDetectAICommand(program: Command, workspaceDir: string): void {
   program
@@ -16,21 +16,21 @@ export function registerDetectAICommand(program: Command, workspaceDir: string):
     .option('--save', 'Save to index metadata')
     .action(async (options) => {
       console.log(chalk.bold('🔍 AI Language Detection'));
-      console.log(chalk.gray('Using language-detector agent for autonomous analysis...\n'));
+      console.log(chalk.gray('Using detect-language skill for autonomous analysis...\n'));
 
-      // Instructions for the user (since we're in CLI, we show what agent should do)
-      console.log(chalk.yellow('⚠️  This command requires Claude Code agent integration.'));
+      // Instructions for the user (since we're in CLI, we show what skill does)
+      console.log(chalk.yellow('⚠️  This command requires Claude Code skill integration.'));
       console.log(chalk.gray('To use this feature:\n'));
-      console.log('1. In Claude Code, invoke the language-detector agent:');
-      console.log(chalk.cyan('   Use Task tool with subagent_type: "language-detector"'));
-      console.log('\n2. The agent will:');
+      console.log('1. In Claude Code, invoke the detect-language skill:');
+      console.log(chalk.cyan('   /detect-language'));
+      console.log('\n2. The skill will:');
       console.log('   - Scan project structure');
       console.log('   - Detect language, framework, build tools');
       console.log('   - Return JSON configuration');
       console.log('\n3. Save the result:');
       console.log(chalk.cyan(`   ralph-dev detect-ai-save '<json-result>'`));
 
-      console.log(chalk.bold('\n📋 Agent Detection Process:'));
+      console.log(chalk.bold('\n📋 Detection Process:'));
       console.log('   Phase 1: Project scan (find config files)');
       console.log('   Phase 2: Analyze evidence (read configs)');
       console.log('   Phase 3: Infer verification commands');

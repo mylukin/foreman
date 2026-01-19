@@ -136,9 +136,8 @@ ralph-dev/
 │   ├── phase-2-breakdown/    # 任务分解
 │   ├── phase-3-implement/    # 实现循环
 │   ├── phase-4-heal/         # 错误恢复
-│   └── phase-5-deliver/      # 质量门控 + PR 创建
-├── agents/
-│   └── language-detector.md  # 基于 AI 的语言检测
+│   ├── phase-5-deliver/      # 质量门控 + PR 创建
+│   └── detect-language/      # 基于 AI 的语言检测
 ├── commands/
 │   └── ralph-dev.md          # 主 /ralph-dev 命令
 └── shared/
