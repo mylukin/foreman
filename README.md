@@ -2,9 +2,9 @@
 
 > Transform requirements into production-ready code autonomously with Claude Code
 
-[![npm version](https://img.shields.io/npm/v/@skillstore/foreman.svg)](https://www.npmjs.com/package/@skillstore/foreman)
+[![npm version](https://img.shields.io/npm/v/ralph-dev.svg)](https://www.npmjs.com/package/ralph-dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-purple.svg)](https://github.com/mylukin/foreman)
+[![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-purple.svg)](https://github.com/mylukin/ralph-dev)
 
 ---
 
@@ -31,7 +31,7 @@ Foreman is an autonomous development system for Claude Code that transforms a si
 In your Claude Code conversation:
 
 ```
-/plugin marketplace add mylukin/foreman
+/plugin marketplace add mylukin/ralph-dev
 ```
 
 This registers the Foreman plugin catalog with Claude Code.
@@ -43,7 +43,7 @@ This registers the Foreman plugin catalog with Claude Code.
 ### Step 2: Install the Foreman plugin
 
 ```
-/plugin install foreman
+/plugin install ralph-dev
 ```
 
 The plugin will auto-build its CLI on first use (~15-30 seconds one-time).
@@ -55,7 +55,7 @@ The plugin will auto-build its CLI on first use (~15-30 seconds one-time).
 ### Step 3: Run your first task
 
 ```
-/foreman "Build a REST API for user authentication"
+/ralph-dev "Build a REST API for user authentication"
 ```
 
 > 步骤 3：运行你的第一个任务
@@ -139,7 +139,7 @@ Phase 4: HEAL         Phase 5: DELIVER
 
 **Input:**
 ```
-/foreman "Add password reset functionality to existing user auth system"
+/ralph-dev "Add password reset functionality to existing user auth system"
 ```
 
 **Phase 1 - Clarification** (1-2 min):
@@ -280,7 +280,7 @@ A **marketplace** is a plugin catalog that helps you discover and install Claude
 In any Claude Code conversation:
 
 ```
-/plugin marketplace add mylukin/foreman
+/plugin marketplace add mylukin/ralph-dev
 ```
 
 This adds the Foreman plugin catalog to Claude Code, allowing you to discover and install the plugin.
@@ -300,7 +300,7 @@ This adds the Foreman plugin catalog to Claude Code, allowing you to discover an
 #### Step 2: Install the Foreman plugin
 
 ```
-/plugin install foreman
+/plugin install ralph-dev
 ```
 
 This installs the Foreman plugin with all its skills, commands, and agents.
@@ -308,30 +308,30 @@ This installs the Foreman plugin with all its skills, commands, and agents.
 > 这会安装 Foreman 插件及其所有技能、命令和代理。
 
 **What happens during installation:**
-- Downloads plugin files to `~/.claude/plugins/foreman`
+- Downloads plugin files to `~/.claude/plugins/ralph-dev`
 - Registers 5 core phase skills + orchestrator
-- Registers `/foreman` command
+- Registers `/ralph-dev` command
 - Sets up auto-bootstrap (CLI builds on first use)
 
 > **安装过程：**
-> - 下载插件文件到 `~/.claude/plugins/foreman`
+> - 下载插件文件到 `~/.claude/plugins/ralph-dev`
 > - 注册 5 个核心阶段技能 + 编排器
-> - 注册 `/foreman` 命令
+> - 注册 `/ralph-dev` 命令
 > - 设置自动引导（CLI 在首次使用时构建）
 
 #### Step 3: Verify installation
 
 ```
-/foreman --help
+/ralph-dev --help
 ```
 
 You should see the Foreman command help message.
 
 > 你应该看到 Foreman 命令帮助消息。
 
-**First use note:** The CLI will auto-build on first `/foreman` invocation (~15-30 seconds one-time). Subsequent uses are instant.
+**First use note:** The CLI will auto-build on first `/ralph-dev` invocation (~15-30 seconds one-time). Subsequent uses are instant.
 
-> **首次使用注意：** CLI 会在首次调用 `/foreman` 时自动构建（一次性，约 15-30 秒）。后续使用即时响应。
+> **首次使用注意：** CLI 会在首次调用 `/ralph-dev` 时自动构建（一次性，约 15-30 秒）。后续使用即时响应。
 
 ### Alternative Installation Methods
 
@@ -342,7 +342,7 @@ For users who prefer direct installation:
 > 对于偏好直接安装的用户：
 
 ```
-/plugin install mylukin/foreman
+/plugin install mylukin/ralph-dev
 ```
 
 This installs directly from the GitHub repository without adding the marketplace first.
@@ -357,11 +357,11 @@ For plugin developers or contributors:
 
 ```bash
 # Clone the repository
-git clone https://github.com/mylukin/foreman.git
-cd foreman
+git clone https://github.com/mylukin/ralph-dev.git
+cd ralph-dev
 
 # Symlink to Claude Code plugins directory
-ln -s $(pwd) ~/.claude/plugins/foreman
+ln -s $(pwd) ~/.claude/plugins/ralph-dev
 
 # The CLI will auto-build on first use (15-30 seconds)
 # No manual build step required!
@@ -374,7 +374,7 @@ ln -s $(pwd) ~/.claude/plugins/foreman
 ### Example 1: New Feature Implementation
 
 ```
-/foreman "Add real-time notifications using WebSockets"
+/ralph-dev "Add real-time notifications using WebSockets"
 ```
 
 **Foreman will:**
@@ -388,7 +388,7 @@ ln -s $(pwd) ~/.claude/plugins/foreman
 ### Example 2: Bug Fix with Tests
 
 ```
-/foreman "Fix: Users can bypass email verification by direct API calls"
+/ralph-dev "Fix: Users can bypass email verification by direct API calls"
 ```
 
 **Foreman will:**
@@ -400,7 +400,7 @@ ln -s $(pwd) ~/.claude/plugins/foreman
 ### Example 3: Refactoring
 
 ```
-/foreman "Refactor authentication middleware to use decorator pattern"
+/ralph-dev "Refactor authentication middleware to use decorator pattern"
 ```
 
 **Foreman will:**
@@ -429,7 +429,7 @@ Foreman uses a **hybrid architecture** for optimal performance:
 ### Project Structure
 
 ```
-foreman/
+ralph-dev/
 ├── cli/                    # TypeScript CLI (npm package)
 │   ├── src/
 │   │   ├── commands/       # state, tasks, detect-language
@@ -438,7 +438,7 @@ foreman/
 │   └── package.json
 │
 ├── skills/                 # Claude Code skills
-│   ├── foreman-orchestrator/   # Main workflow controller
+│   ├── dev-orchestrator/   # Main workflow controller
 │   ├── phase-1-clarify/        # Requirement gathering
 │   ├── phase-2-breakdown/      # Task decomposition
 │   ├── phase-3-implement/      # TDD implementation loop
@@ -446,7 +446,7 @@ foreman/
 │   └── phase-5-deliver/        # Quality gates + PR
 │
 ├── commands/
-│   └── foreman.md          # /foreman slash command
+│   └── ralph-dev.md          # /ralph-dev slash command
 │
 ├── agents/
 │   └── language-detector.md    # Language detection agent
@@ -457,9 +457,9 @@ foreman/
 
 ### Workspace Structure
 
-When you run `/foreman`, it creates a `.autopilot/` workspace in your project:
+When you run `/ralph-dev`, it creates a `.autopilot/` workspace in your project:
 
-> 当你运行 `/foreman` 时，它会在你的项目中创建 `.autopilot/` 工作区：
+> 当你运行 `/ralph-dev` 时，它会在你的项目中创建 `.autopilot/` 工作区：
 
 ```
 your-project/
@@ -483,13 +483,13 @@ your-project/
 
 **Symptom:**
 ```
-Error: Marketplace 'mylukin/foreman' not found
+Error: Marketplace 'mylukin/ralph-dev' not found
 ```
 
 **Solution:**
 ```
 # Try alternative installation method (direct GitHub)
-/plugin install mylukin/foreman
+/plugin install mylukin/ralph-dev
 
 # Or use local development setup (see Alternative Installation Methods)
 ```
@@ -500,17 +500,17 @@ Error: Marketplace 'mylukin/foreman' not found
 
 **Symptom:**
 ```
-Unknown command: /foreman
+Unknown command: /ralph-dev
 ```
 
 **Solution:**
 ```
 # Method 1: Reinstall via marketplace
-/plugin marketplace add mylukin/foreman
-/plugin install foreman
+/plugin marketplace add mylukin/ralph-dev
+/plugin install ralph-dev
 
 # Method 2: Direct GitHub installation
-/plugin install mylukin/foreman
+/plugin install mylukin/ralph-dev
 
 # Restart Claude Code session
 /clear
@@ -534,7 +534,7 @@ node --version
 npm --version
 
 # Manual build (for debugging)
-cd ~/.claude/plugins/foreman/cli
+cd ~/.claude/plugins/ralph-dev/cli
 npm install
 npm run build
 ```
@@ -545,10 +545,10 @@ npm run build
 
 **Solution:**
 ```
-# Manually specify language before running foreman
+# Manually specify language before running ralph-dev
 /detect-language
 
-# Or add a .foreman-config.json in your project root:
+# Or add a .ralph-dev-config.json in your project root:
 {
   "language": "typescript",
   "framework": "nextjs"
@@ -628,14 +628,14 @@ We welcome contributions! Here's how to get started:
 > 我们欢迎贡献！以下是入门方法：
 
 ### Report Bugs
-[Create an issue](https://github.com/mylukin/foreman/issues) with:
-- Foreman version (`/foreman --version`)
+[Create an issue](https://github.com/mylukin/ralph-dev/issues) with:
+- Foreman version (`/ralph-dev --version`)
 - Claude Code version
 - Steps to reproduce
 - Expected vs actual behavior
 
 ### Suggest Features
-[Open a discussion](https://github.com/mylukin/foreman/discussions) with your use case and proposed solution.
+[Open a discussion](https://github.com/mylukin/ralph-dev/discussions) with your use case and proposed solution.
 
 ### Submit Pull Requests
 1. Fork the repository
@@ -677,7 +677,7 @@ Add templates in `cli/src/language/templates/` for new languages. See existing t
 
 - **[ralph-ryan](https://github.com/colemanword/ralph-ryan)** - Fresh context pattern, interactive PRD generation
 - **[superpowers](https://github.com/colemanword/superpowers)** - TDD Iron Law, systematic debugging, verification-first approach
-- **[agent-foreman](https://github.com/example/agent-foreman)** - Task management CLI, workflow enforcement
+- **[agent-ralph-dev](https://github.com/example/agent-ralph-dev)** - Task management CLI, workflow enforcement
 
 > 灵感来源
 
@@ -686,10 +686,10 @@ Add templates in `cli/src/language/templates/` for new languages. See existing t
 ## Support
 
 - 📖 **Documentation**: [Skill files](/skills) - Deep dive into each phase
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/mylukin/foreman/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/mylukin/foreman/discussions)
-- 🏪 **Marketplace**: Install via `/plugin marketplace add mylukin/foreman`
-- 🌐 **Repository**: [github.com/mylukin/foreman](https://github.com/mylukin/foreman)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/mylukin/ralph-dev/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/mylukin/ralph-dev/discussions)
+- 🏪 **Marketplace**: Install via `/plugin marketplace add mylukin/ralph-dev`
+- 🌐 **Repository**: [github.com/mylukin/ralph-dev](https://github.com/mylukin/ralph-dev)
 
 ---
 
@@ -717,9 +717,9 @@ Special thanks to early testers and contributors who helped shape Foreman into a
 
 In Claude Code:
 ```
-/plugin marketplace add mylukin/foreman
-/plugin install foreman
-/foreman "Your first task here"
+/plugin marketplace add mylukin/ralph-dev
+/plugin install ralph-dev
+/ralph-dev "Your first task here"
 ```
 
 > 准备好改变你的开发工作流了吗？

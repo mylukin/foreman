@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Foreman CLI Bootstrap Script
-# Include this at the top of every skill that uses skillstore-foreman
+# Include this at the top of every skill that uses ralph-dev
 #
 # Usage in SKILL.md:
 #   source ${CLAUDE_PLUGIN_ROOT}/shared/bootstrap-cli.sh
@@ -52,7 +52,7 @@ fi
 
 # Determine plugin root
 if [ -z "${CLAUDE_PLUGIN_ROOT:-}" ]; then
-  # Fallback: assume script is in foreman/shared/
+  # Fallback: assume script is in ralph-dev/shared/
   CLAUDE_PLUGIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 
@@ -238,7 +238,7 @@ build_cli() {
 # Main Bootstrap Logic
 # ============================================================
 
-bootstrap_foreman_cli() {
+bootstrap_ralph-dev_cli() {
   local force_rebuild="${FORCE_REBUILD:-0}"
 
   # Check if we should skip bootstrap
@@ -296,7 +296,7 @@ bootstrap_foreman_cli() {
     log_error "CRITICAL: CLI validation failed after build"
     log_error ""
     log_error "Please report this issue:"
-    log_error "  https://github.com/mylukin/foreman/issues"
+    log_error "  https://github.com/mylukin/ralph-dev/issues"
     log_error ""
     log_error "Include this information:"
     log_error "  - Node.js version: $(node --version 2>&1 || echo 'not found')"
@@ -310,14 +310,14 @@ bootstrap_foreman_cli() {
 # Exported Functions
 # ============================================================
 
-# Create skillstore-foreman wrapper function for use in skills
-skillstore-foreman() {
+# Create ralph-dev wrapper function for use in skills
+ralph-dev() {
   _run_cli "$@"
 }
 
 # Export functions for use in bash scripts
 export -f _run_cli
-export -f skillstore-foreman
+export -f ralph-dev
 
 # ============================================================
 # Auto-Execute Bootstrap
@@ -329,11 +329,11 @@ export -f skillstore-foreman
 # Check if script is being sourced (safely handle BASH_SOURCE)
 if [ -n "${BASH_SOURCE[0]:-}" ] && [ "${BASH_SOURCE[0]}" != "${0}" ]; then
   # Script is being sourced, run bootstrap
-  bootstrap_foreman_cli
+  bootstrap_ralph-dev_cli
 elif [ -z "${BASH_SOURCE[0]:-}" ]; then
   # BASH_SOURCE not available (sourced in some shells), run bootstrap
-  bootstrap_foreman_cli
+  bootstrap_ralph-dev_cli
 else
   # Script is being executed directly (for testing)
-  echo "Bootstrap script loaded. Run: bootstrap_foreman_cli"
+  echo "Bootstrap script loaded. Run: bootstrap_ralph-dev_cli"
 fi

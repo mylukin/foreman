@@ -1,10 +1,10 @@
 {
-  "name": "@skillstore/foreman",
+  "name": "ralph-dev",
   "version": "2.2.0",
   "description": "CLI tool for Foreman - efficient operations for AI agents",
   "main": "dist/index.js",
   "bin": {
-    "skillstore-foreman": "./bin/skillstore-foreman.js"
+    "ralph-dev": "./bin/ralph-dev.js"
   },
   "files": [
     "dist",
@@ -22,7 +22,7 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "foreman",
+    "ralph-dev",
     "cli",
     "ai-agent",
     "task-management",
@@ -35,12 +35,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mylukin/foreman.git",
+    "url": "https://github.com/mylukin/ralph-dev.git",
     "directory": "cli"
   },
-  "homepage": "https://github.com/mylukin/foreman#readme",
+  "homepage": "https://github.com/mylukin/ralph-dev#readme",
   "bugs": {
-    "url": "https://github.com/mylukin/foreman/issues"
+    "url": "https://github.com/mylukin/ralph-dev/issues"
   },
   "dependencies": {
     "commander": "^11.1.0",

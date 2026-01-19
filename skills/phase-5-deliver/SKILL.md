@@ -15,12 +15,12 @@ Run final quality gates, perform two-stage code review (spec compliance + code q
 
 ## When to Use
 
-Invoked by foreman-orchestrator as Phase 5, after Phase 3 (Implement) completes all tasks.
+Invoked by dev-orchestrator as Phase 5, after Phase 3 (Implement) completes all tasks.
 
 ## Input
 
 - Completed tasks from Phase 3
-- Task directory: `.foreman/tasks/`
+- Task directory: `.ralph-dev/tasks/`
 - Implementation files: All modified/created files
 
 ## Execution
@@ -47,7 +47,7 @@ echo "📊 Gathering implementation summary..."
 echo ""
 
 # Get all completed tasks
-COMPLETED_TASKS=$(skillstore-foreman tasks list --status passing --json)
+COMPLETED_TASKS=$(ralph-dev tasks list --status passing --json)
 TASK_COUNT=$(echo "$COMPLETED_TASKS"
 
 echo "✅ Completed Tasks: $TASK_COUNT"
@@ -78,7 +78,7 @@ echo "🔧 Detecting Language Configuration..."
 echo ""
 
 # Read from index metadata (saved during Phase 2 or via detect --save)
-INDEX_JSON=$(skillstore-foreman tasks list --json 2>/dev/null)
+INDEX_JSON=$(ralph-dev tasks list --json 2>/dev/null)
 LANGUAGE_CONFIG=$(echo "$INDEX_JSON"
 
 # If no config found, run detection now
@@ -86,7 +86,7 @@ if [ -z "$LANGUAGE_CONFIG" ] || [ "$LANGUAGE_CONFIG" = "null" ]; then
   echo "⚠️  No language config in index. Running detection..."
   echo ""
 
-  DETECT_OUTPUT=$(skillstore-foreman detect --save --json 2>&1)
+  DETECT_OUTPUT=$(ralph-dev detect --save --json 2>&1)
   DETECT_STATUS=$?
 
   if [ $DETECT_STATUS -ne 0 ]; then
@@ -98,7 +98,7 @@ if [ -z "$LANGUAGE_CONFIG" ] || [ "$LANGUAGE_CONFIG" = "null" ]; then
   fi
 
   # Re-read from index after saving
-  INDEX_JSON=$(skillstore-foreman tasks list --json 2>/dev/null)
+  INDEX_JSON=$(ralph-dev tasks list --json 2>/dev/null)
   LANGUAGE_CONFIG=$(echo "$INDEX_JSON"
 fi
 
@@ -297,7 +297,7 @@ else
   if [ "$CURRENT_BRANCH" = "$MAIN_BRANCH" ]; then
     echo "⚠️  Currently on main branch ($MAIN_BRANCH)"
     echo "   Create feature branch first:"
-    echo "   git checkout -b feature/foreman-implementation"
+    echo "   git checkout -b feature/ralph-dev-implementation"
     echo ""
   else
     # Generate PR description
@@ -366,7 +366,7 @@ echo ""
 
 ```bash
 # Update state to complete
-skillstore-foreman state update --phase complete
+ralph-dev state update --phase complete
 ```
 
 ### Step 8: Return Result
@@ -549,16 +549,16 @@ update_progress_txt() {
   local COMPLETED_TASKS=$1
   local COMMIT_SHA=$2
 
-  PROGRESS_FILE=".foreman/progress.txt"
+  PROGRESS_FILE=".ralph-dev/progress.txt"
 
   # Append completed tasks to progress file
   echo "$COMPLETED_TASKS" | jq -r '.[] | "\(.status
     --arg commit "$COMMIT_SHA" >> "$PROGRESS_FILE"
 
   # Update stats line
-  TOTAL=$(skillstore-foreman tasks list --json
-  DONE=$(skillstore-foreman tasks list --status completed --json
-  FAILED=$(skillstore-foreman tasks list --status failed --json
+  TOTAL=$(ralph-dev tasks list --json
+  DONE=$(ralph-dev tasks list --status completed --json
+  FAILED=$(ralph-dev tasks list --status failed --json
   PROGRESS=$((DONE * 100 / TOTAL))
 
   # Update stats (replace last Stats: line)
@@ -641,7 +641,7 @@ Run tests: \`npm test\` (or project-specific command)
 
 ---
 
-🤖 Generated with [Foreman](https://github.com/mylukin/foreman) for Claude Code
+🤖 Generated with [Foreman](https://github.com/mylukin/ralph-dev) for Claude Code
 EOF
 }
 ```
@@ -665,11 +665,11 @@ extract_acceptance_criteria() {
 find_task_file() {
   local TASK_ID=$1
 
-  # Convert task ID to file path (e.g., auth.login → .foreman/tasks/auth/login.md)
+  # Convert task ID to file path (e.g., auth.login → .ralph-dev/tasks/auth/login.md)
   MODULE=$(echo "$TASK_ID"
   FILENAME=$(echo "$TASK_ID"
 
-  echo ".foreman/tasks/$MODULE/$FILENAME"
+  echo ".ralph-dev/tasks/$MODULE/$FILENAME"
 }
 ```
 

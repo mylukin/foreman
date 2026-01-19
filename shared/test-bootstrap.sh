@@ -15,17 +15,17 @@ echo "1. Testing bootstrap script sourcing..."
 source "${CLAUDE_PLUGIN_ROOT}/shared/bootstrap-cli.sh"
 echo ""
 
-echo "2. Testing skillstore-foreman function..."
-if command -v skillstore-foreman &> /dev/null; then
-  echo "✓ skillstore-foreman function is available"
+echo "2. Testing ralph-dev function..."
+if command -v ralph-dev &> /dev/null; then
+  echo "✓ ralph-dev function is available"
 else
-  echo "✗ skillstore-foreman function is NOT available"
+  echo "✗ ralph-dev function is NOT available"
   exit 1
 fi
 echo ""
 
 echo "3. Testing CLI execution..."
-VERSION=$(skillstore-foreman --version 2>&1)
+VERSION=$(ralph-dev --version 2>&1)
 if [ $? -eq 0 ]; then
   echo "✓ CLI executed successfully"
   echo "  Version: $VERSION"
@@ -36,7 +36,7 @@ fi
 echo ""
 
 echo "4. Testing tasks list command..."
-if skillstore-foreman tasks list --help > /dev/null 2>&1; then
+if ralph-dev tasks list --help > /dev/null 2>&1; then
   echo "✓ Tasks command works"
 else
   echo "✗ Tasks command failed"

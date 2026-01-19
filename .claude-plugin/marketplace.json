@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "foreman-marketplace",
+  "name": "ralph-dev-marketplace",
   "version": "1.0.0",
   "description": "Official marketplace for Foreman - Autonomous AI Development System",
   "owner": {
@@ -10,12 +10,12 @@
   "metadata": {
     "description": "Autonomous end-to-end development system that transforms requirements into production-ready code with zero manual intervention",
     "version": "2.1.0",
-    "homepage": "https://github.com/mylukin/foreman",
-    "repository": "https://github.com/mylukin/foreman"
+    "homepage": "https://github.com/mylukin/ralph-dev",
+    "repository": "https://github.com/mylukin/ralph-dev"
   },
   "plugins": [
     {
-      "name": "foreman",
+      "name": "ralph-dev",
       "source": "./",
       "description": "Autonomous end-to-end development system - from requirement to production-ready code with zero manual intervention",
       "version": "2.1.0",
@@ -25,7 +25,7 @@
       },
       "category": "productivity",
       "tags": [
-        "foreman",
+        "ralph-dev",
         "autonomous",
         "ai-agent",
         "code-generation",
@@ -37,8 +37,8 @@
         "pr-automation"
       ],
       "license": "MIT",
-      "homepage": "https://github.com/mylukin/foreman",
-      "repository": "https://github.com/mylukin/foreman",
+      "homepage": "https://github.com/mylukin/ralph-dev",
+      "repository": "https://github.com/mylukin/ralph-dev",
       "keywords": [
         "autonomous development",
         "ai coding",

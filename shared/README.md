@@ -10,12 +10,12 @@ This directory contains reusable scripts for all Foreman skills.
 
 **Usage in skills:**
 ```bash
-# At the top of any SKILL.md that uses skillstore-foreman
+# At the top of any SKILL.md that uses ralph-dev
 source ${CLAUDE_PLUGIN_ROOT}/shared/bootstrap-cli.sh
 
 # Then use the CLI anywhere:
-skillstore-foreman tasks list
-skillstore-foreman state update --phase implement
+ralph-dev tasks list
+ralph-dev state update --phase implement
 ```
 
 **What it does:**
@@ -23,7 +23,7 @@ skillstore-foreman state update --phase implement
 2. Builds CLI if missing (npm install + TypeScript compilation)
 3. Validates CLI works correctly (runs `--version`)
 4. Provides friendly error messages if build fails
-5. Exports `skillstore-foreman` function for use in skills
+5. Exports `ralph-dev` function for use in skills
 
 **First run:** 15-30 seconds (npm install + build)
 **Subsequent runs:** Instant (CLI already built)
@@ -116,7 +116,7 @@ Available functions:
 
 **Tests:**
 1. Bootstrap script sources successfully
-2. `skillstore-foreman` function is available
+2. `ralph-dev` function is available
 3. CLI executes and returns version
 4. CLI commands work (tasks list)
 
@@ -127,8 +127,8 @@ Testing Foreman CLI Bootstrap...
 1. Testing bootstrap script sourcing...
 ✓ Foreman CLI ready
 
-2. Testing skillstore-foreman function...
-✓ skillstore-foreman function is available
+2. Testing ralph-dev function...
+✓ ralph-dev function is available
 
 3. Testing CLI execution...
 ✓ CLI executed successfully
@@ -160,16 +160,16 @@ At the top of your skill execution section, add:
 source ${CLAUDE_PLUGIN_ROOT}/shared/bootstrap-cli.sh
 
 # Verify CLI is ready (optional)
-skillstore-foreman --version
+ralph-dev --version
 echo ""
 ```
 
 ### Step 1: Your actual skill logic...
 ```
 
-### Step 2: Use skillstore-foreman Function
+### Step 2: Use ralph-dev Function
 
-Replace all `node cli/dist/index.js` calls with `skillstore-foreman`:
+Replace all `node cli/dist/index.js` calls with `ralph-dev`:
 
 **Before:**
 ```bash
@@ -178,7 +178,7 @@ node cli/dist/index.js tasks list --status pending
 
 **After:**
 ```bash
-skillstore-foreman tasks list --status pending
+ralph-dev tasks list --status pending
 ```
 
 ### Step 3: Test Your Skill
@@ -223,13 +223,13 @@ Run the skill and verify bootstrap works:
 **Solution:**
 Ensure `CLAUDE_PLUGIN_ROOT` is set correctly:
 ```bash
-export CLAUDE_PLUGIN_ROOT=/path/to/foreman
+export CLAUDE_PLUGIN_ROOT=/path/to/ralph-dev
 source ${CLAUDE_PLUGIN_ROOT}/shared/bootstrap-cli.sh
 ```
 
 ### Function Not Available
 
-**Error:** `skillstore-foreman: command not found`
+**Error:** `ralph-dev: command not found`
 
 **Solution:**
 Make sure you're **sourcing** the script (not executing):
@@ -274,4 +274,4 @@ See [docs/CLI_ARCHITECTURE.md](../docs/CLI_ARCHITECTURE.md) for full rationale.
 ---
 
 **Maintained by:** Foreman Team
-**Issues:** https://github.com/mylukin/foreman/issues
+**Issues:** https://github.com/mylukin/ralph-dev/issues

@@ -28,7 +28,7 @@ export function registerDetectAICommand(program: Command, workspaceDir: string):
       console.log('   - Detect language, framework, build tools');
       console.log('   - Return JSON configuration');
       console.log('\n3. Save the result:');
-      console.log(chalk.cyan(`   skillstore-foreman detect-ai-save '<json-result>'`));
+      console.log(chalk.cyan(`   ralph-dev detect-ai-save '<json-result>'`));
 
       console.log(chalk.bold('\n📋 Agent Detection Process:'));
       console.log('   Phase 1: Project scan (find config files)');
@@ -60,7 +60,7 @@ export function registerDetectAICommand(program: Command, workspaceDir: string):
 
       console.log(chalk.bold('\n💡 Tip:'));
       console.log('For manual detection (template-based), use:');
-      console.log(chalk.cyan('   skillstore-foreman detect'));
+      console.log(chalk.cyan('   ralph-dev detect'));
     });
 
   // Helper command to save AI detection result
@@ -79,7 +79,7 @@ export function registerDetectAICommand(program: Command, workspaceDir: string):
         }
 
         // Save to index
-        const tasksDir = path.join(workspaceDir, '.foreman', 'tasks');
+        const tasksDir = path.join(workspaceDir, '.ralph-dev', 'tasks');
         const indexManager = new IndexManager(tasksDir);
         indexManager.updateMetadata({ languageConfig });
 

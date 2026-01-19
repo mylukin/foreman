@@ -385,7 +385,7 @@ Source files:
 3. pnpm test              # Vitest
 4. pnpm run build         # Vite build
 
-💾 Saving configuration to .foreman/tasks/index.json...
+💾 Saving configuration to .ralph-dev/tasks/index.json...
 ```
 
 ## Edge Cases
@@ -470,11 +470,11 @@ If no recognized build system:
 This agent is invoked by:
 
 ```bash
-skillstore-foreman detect --ai
+ralph-dev detect --ai
 ```
 
 The CLI will:
 1. Spawn this agent
 2. Agent performs detection
 3. Returns JSON result
-4. CLI saves to `.foreman/tasks/index.json` metadata
+4. CLI saves to `.ralph-dev/tasks/index.json` metadata

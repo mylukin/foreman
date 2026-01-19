@@ -1,5 +1,5 @@
 ---
-name: foreman-orchestrator
+name: dev-orchestrator
 description: Autonomous end-to-end development from requirement to delivery. Use when user wants complete automation, "build X for me", or full feature implementation without manual steps.
 allowed-tools: [Task, Read, Write, Bash]
 user-invocable: true
@@ -9,7 +9,7 @@ user-invocable: true
 
 ## Overview
 
-You are the foreman system orchestrator. Your mission: Transform a user requirement into delivered, tested, production-ready code with ZERO manual intervention after initial clarification.
+You are the ralph-dev system orchestrator. Your mission: Transform a user requirement into delivered, tested, production-ready code with ZERO manual intervention after initial clarification.
 
 ## Workflow Phases
 
@@ -23,10 +23,10 @@ You are the foreman system orchestrator. Your mission: Transform a user requirem
 
 ## State Management
 
-All state persists in `.foreman/`:
+All state persists in `.ralph-dev/`:
 - `state.json` - Current phase, progress, errors (managed by CLI)
 - `prd.md` - Product requirements document
-- `tasks/` - Modular task storage (agent-foreman style)
+- `tasks/` - Modular task storage (agent-ralph-dev style)
 - `tasks/index.json` - Task index (managed by CLI)
 - `progress.log` - Audit trail
 - `debug.log` - Error recovery log
@@ -40,10 +40,10 @@ All state persists in `.foreman/`:
 cd $PROJECT_ROOT
 
 # Detect project language and save configuration
-skillstore-foreman detect --save
+ralph-dev detect --save
 
 # Initialize state to clarify phase
-skillstore-foreman state set --phase clarify
+ralph-dev state set --phase clarify
 ```
 
 ### Phase 1: CLARIFY (Interactive)
@@ -68,7 +68,7 @@ Use the Task tool to invoke:
 Execute requirement clarification:
 1. Ask 3-5 structured questions with lettered options (A, B, C, D)
 2. Generate detailed PRD from answers
-3. Save to .claude/foreman/prd.md
+3. Save to .claude/ralph-dev/prd.md
 4. Return completion signal"
   context: fork
 ```
@@ -80,14 +80,14 @@ Execute requirement clarification:
 ---PHASE RESULT---
 phase: clarify
 status: complete
-output_file: .claude/foreman/prd.md
+output_file: .claude/ralph-dev/prd.md
 next_phase: breakdown
 ---END PHASE RESULT---
 ```
 
 **Update state:**
 ```bash
-skillstore-foreman state update --phase breakdown
+ralph-dev state update --phase breakdown
 ```
 
 ### Phase 2: BREAKDOWN (Autonomous)
@@ -98,7 +98,7 @@ Phase 2/5: Breaking down into tasks...
 
 Read PRD:
 ```bash
-PRD=$(cat .foreman/prd.md)
+PRD=$(cat .ralph-dev/prd.md)
 ```
 
 Delegate to `phase-2-breakdown` skill:
@@ -112,8 +112,8 @@ $PRD
 Execute task breakdown:
 1. Extract user stories from PRD
 2. Convert each story to 1-3 atomic tasks (max 30 min each)
-3. Use CLI to create tasks: skillstore-foreman tasks create
-4. CLI will create modular markdown files in .foreman/tasks/
+3. Use CLI to create tasks: ralph-dev tasks create
+4. CLI will create modular markdown files in .ralph-dev/tasks/
 5. Assign dependencies and priorities
 6. Return task summary"
   context: fork
@@ -135,16 +135,16 @@ Approve? (yes/no/modify)
 **Handle user response:**
 - `yes` → Proceed to Phase 3
 - `no` → Exit with "Plan rejected by user"
-- `modify` → Wait for user to edit `.claude/foreman/tasks.json`, then proceed
+- `modify` → Wait for user to edit `.claude/ralph-dev/tasks.json`, then proceed
 
 **Update state:**
 ```bash
 # Get task count from CLI
-TASK_LIST=$(skillstore-foreman tasks list --json)
+TASK_LIST=$(ralph-dev tasks list --json)
 TOTAL_TASKS=$(echo "$TASK_LIST"
 
 # Update state using CLI
-skillstore-foreman state update --phase implement
+ralph-dev state update --phase implement
 ```
 
 ### Phase 3: IMPLEMENT (Autonomous Loop)
@@ -158,16 +158,16 @@ Delegate to `phase-3-implement` skill (which handles Phase 4 healing internally)
 ```
 Use the Task tool to invoke:
   subagent_type: "phase-3-implement"
-  prompt: "Use skillstore-foreman to manage tasks
+  prompt: "Use ralph-dev to manage tasks
 
 Execute implementation loop:
-1. Get next task: skillstore-foreman tasks next --json
+1. Get next task: ralph-dev tasks next --json
 2. For each pending task:
-   a. Mark as started: skillstore-foreman tasks start <task_id>
+   a. Mark as started: ralph-dev tasks start <task_id>
    b. Spawn implementer agent (fresh context)
    c. If error → spawn debugger agent (auto-heal)
-   d. Mark complete: skillstore-foreman tasks done <task_id> --duration '4m 32s'
-   e. Or mark failed: skillstore-foreman tasks fail <task_id> --reason 'error message'
+   d. Mark complete: ralph-dev tasks done <task_id> --duration '4m 32s'
+   e. Or mark failed: ralph-dev tasks fail <task_id> --reason 'error message'
    f. Show progress update
 3. Continue until all tasks processed
 4. Return summary"
@@ -206,7 +206,7 @@ next_phase: deliver
 
 **Update state:**
 ```bash
-skillstore-foreman state update --phase deliver
+ralph-dev state update --phase deliver
 ```
 
 ### Phase 5: DELIVER (Final Verification)
@@ -220,10 +220,10 @@ Delegate to `phase-5-deliver` skill:
 ```
 Use the Task tool to invoke:
   subagent_type: "phase-5-deliver"
-  prompt: "Get state: skillstore-foreman state get --json
+  prompt: "Get state: ralph-dev state get --json
 
 Execute delivery workflow:
-1. Get language config: skillstore-foreman detect --json
+1. Get language config: ralph-dev detect --json
 2. Run quality gates using language-specific commands:
    - Run verification commands from languageConfig.verifyCommands
    - Example for TypeScript: npx tsc --noEmit, npm run lint, npm test, npm run build
@@ -252,7 +252,7 @@ phase: deliver
 status: success
 commit_hash: abc123f
 pr_number: 456
-pr_url: https://github.com/mylukin/foreman/pull/456
+pr_url: https://github.com/mylukin/ralph-dev/pull/456
 stats:
   completed: 15
   total: 15
@@ -274,7 +274,7 @@ stats:
 │ Commit:      abc123f "feat: Add feature"    │
 │ Branch:      feature/task-management        │
 │ PR:          #456 (ready for review)        │
-│ URL:         github.com/mylukin/foreman/pull/456  │
+│ URL:         github.com/mylukin/ralph-dev/pull/456  │
 ├──────────────────────────────────────────────┤
 │ 📊 Statistics                                │
 ├──────────────────────────────────────────────┤
@@ -286,7 +286,7 @@ stats:
 └──────────────────────────────────────────────┘
 
 Next steps:
-1. Review PR: github.com/mylukin/foreman/pull/456
+1. Review PR: github.com/mylukin/ralph-dev/pull/456
 2. Merge when approved
 3. Deploy to production
 
@@ -296,7 +296,7 @@ Thank you for using Foreman! 🎉
 **Archive session:**
 ```bash
 # Clear state
-skillstore-foreman state clear
+ralph-dev state clear
 
 # Archive workspace
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
@@ -314,14 +314,14 @@ cp -r workspace workspace-archive/$TIMESTAMP
 
 ## Resume Mode
 
-When user runs `/foreman resume`:
+When user runs `/ralph-dev resume`:
 
-1. Load state using CLI: `skillstore-foreman state get --json`
+1. Load state using CLI: `ralph-dev state get --json`
 2. Check current phase
 3. Resume from current phase:
    - `clarify` → Continue with remaining questions
    - `breakdown` → Show plan again for approval
-   - `implement` → Get next task: `skillstore-foreman tasks next`
+   - `implement` → Get next task: `ralph-dev tasks next`
    - `deliver` → Re-run delivery
 
 ```markdown
@@ -338,24 +338,24 @@ When user runs `/foreman resume`:
 
 ## Status Mode
 
-When user runs `/foreman status`:
+When user runs `/ralph-dev status`:
 
 ```bash
 # Get state from CLI
-skillstore-foreman state get
+ralph-dev state get
 
 # Get task list
-skillstore-foreman tasks list --status completed
-skillstore-foreman tasks list --status pending
+ralph-dev tasks list --status completed
+ralph-dev tasks list --status pending
 ```
 
 ## Cancel Mode
 
-When user runs `/foreman cancel`:
+When user runs `/ralph-dev cancel`:
 
 ```bash
 # Clear state using CLI
-skillstore-foreman state clear
+ralph-dev state clear
 
 # Archive workspace
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)

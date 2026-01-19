@@ -1,15 +1,15 @@
 ---
-name: foreman
+name: ralph-dev
 description: Start autonomous end-to-end development from requirement to production-ready code
-usage: /foreman "<requirement>" [--mode=<new|resume|status|cancel>]
+usage: /ralph-dev "<requirement>" [--mode=<new|resume|status|cancel>]
 examples:
-  - /foreman "Build a task management app with user authentication"
-  - /foreman "Add dark mode toggle to the application"
-  - /foreman --mode=resume
-  - /foreman --mode=status
+  - /ralph-dev "Build a task management app with user authentication"
+  - /ralph-dev "Add dark mode toggle to the application"
+  - /ralph-dev --mode=resume
+  - /ralph-dev --mode=status
 ---
 
-# /foreman Command
+# /ralph-dev Command
 
 ## Description
 
@@ -22,46 +22,46 @@ Start the Foreman autonomous development system. Transforms a single requirement
 ### Start New Session
 
 ```bash
-/foreman "<requirement>"
+/ralph-dev "<requirement>"
 ```
 
 **Examples:**
 ```bash
-/foreman "Build a task management app with user authentication"
-/foreman "Add user profile page with avatar upload"
-/foreman "Implement password reset via email"
-/foreman "Create REST API for product catalog"
+/ralph-dev "Build a task management app with user authentication"
+/ralph-dev "Add user profile page with avatar upload"
+/ralph-dev "Implement password reset via email"
+/ralph-dev "Create REST API for product catalog"
 ```
 
 ### Resume Session
 
 ```bash
-/foreman --mode=resume
+/ralph-dev --mode=resume
 # or
-/foreman resume
+/ralph-dev resume
 ```
 
-Resumes the last foreman session from where it stopped.
+Resumes the last ralph-dev session from where it stopped.
 
 ### Check Status
 
 ```bash
-/foreman --mode=status
+/ralph-dev --mode=status
 # or
-/foreman status
+/ralph-dev status
 ```
 
-Shows current foreman session status and progress.
+Shows current ralph-dev session status and progress.
 
 ### Cancel Session
 
 ```bash
-/foreman --mode=cancel
+/ralph-dev --mode=cancel
 # or
-/foreman cancel
+/ralph-dev cancel
 ```
 
-Cancels the current foreman session and archives the workspace.
+Cancels the current ralph-dev session and archives the workspace.
 
 ---
 
@@ -76,7 +76,7 @@ Cancels the current foreman session and archives the workspace.
 
 ## Workflow
 
-When you run `/foreman "<requirement>"`, the system executes 5 phases:
+When you run `/ralph-dev "<requirement>"`, the system executes 5 phases:
 
 ### Phase 1: CLARIFY (Interactive)
 
@@ -161,7 +161,7 @@ Approve? (yes/no/modify)
 🚀 DELIVERY COMPLETE
    Commit: abc123f "feat: Add task management"
    PR: #123 (ready for review)
-   URL: github.com/mylukin/foreman/pull/123
+   URL: github.com/mylukin/ralph-dev/pull/123
 ```
 
 ---
@@ -179,7 +179,7 @@ Approve? (yes/no/modify)
 │ Commit:      abc123f "feat: Add feature"    │
 │ Branch:      feature/task-management        │
 │ PR:          #456 (ready for review)        │
-│ URL:         github.com/mylukin/foreman/pull/456  │
+│ URL:         github.com/mylukin/ralph-dev/pull/456  │
 ├──────────────────────────────────────────────┤
 │ 📊 Statistics                                │
 ├──────────────────────────────────────────────┤
@@ -191,7 +191,7 @@ Approve? (yes/no/modify)
 └──────────────────────────────────────────────┘
 
 Next steps:
-1. Review PR: github.com/mylukin/foreman/pull/456
+1. Review PR: github.com/mylukin/ralph-dev/pull/456
 2. Merge when approved
 3. Deploy to production
 
@@ -221,11 +221,11 @@ Auto-fixes: 3 errors healed
 
 ## Implementation
 
-This command delegates to the `foreman-orchestrator` skill:
+This command delegates to the `dev-orchestrator` skill:
 
 ```markdown
 Use Skill tool to invoke:
-  skill: "foreman-orchestrator"
+  skill: "dev-orchestrator"
   args: "<user-requirement>"
 ```
 
@@ -241,10 +241,10 @@ The orchestrator skill handles:
 
 ## Files Created
 
-During execution, Foreman creates these files in `.foreman/`:
+During execution, Foreman creates these files in `.ralph-dev/`:
 
 ```
-.foreman/
+.ralph-dev/
 ├── state.json              # Current phase and progress
 ├── prd.md                  # Product Requirements Document
 ├── tasks/                  # Modular task storage
@@ -273,7 +273,7 @@ During execution, Foreman creates these files in `.foreman/`:
 
 ## Configuration
 
-Foreman respects these settings in `.foreman/tasks/index.json`:
+Foreman respects these settings in `.ralph-dev/tasks/index.json`:
 
 ```json
 {
@@ -300,7 +300,7 @@ Foreman respects these settings in `.foreman/tasks/index.json`:
 
 ❌ **Bad:**
 - "Make it better" (too vague)
-- "Fix the bug" (use debugging tools, not foreman)
+- "Fix the bug" (use debugging tools, not ralph-dev)
 - "Refactor everything" (too broad, specify what to refactor)
 
 ### When to Use Foreman
@@ -322,7 +322,7 @@ Foreman respects these settings in `.foreman/tasks/index.json`:
 If interrupted (network issue, timeout, etc.), simply run:
 
 ```bash
-/foreman resume
+/ralph-dev resume
 ```
 
 Foreman will continue from the last saved state.
@@ -343,7 +343,7 @@ Foreman will continue from the last saved state.
 ### Example 1: New Web App
 
 ```bash
-User: /foreman "Build a blog platform with markdown support and comments"
+User: /ralph-dev "Build a blog platform with markdown support and comments"
 
 Foreman:
 🚀 Starting Foreman...
@@ -374,7 +374,7 @@ Phase 3/5: Implementing tasks...
 ### Example 2: Add Feature to Existing Project
 
 ```bash
-User: /foreman "Add user profile page with avatar upload and bio editing"
+User: /ralph-dev "Add user profile page with avatar upload and bio editing"
 
 Foreman:
 🚀 Starting Foreman...
@@ -389,7 +389,7 @@ Phase 1/5: Clarifying requirements...
 ### Example 3: Resume Interrupted Session
 
 ```bash
-User: /foreman resume
+User: /ralph-dev resume
 
 Foreman:
 ┌────────────────────────────────────┐

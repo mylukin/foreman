@@ -20,7 +20,7 @@ Total: 35 | Done: 2 | Failed: 0 | Healed: 1 | Progress: 6%
 - Zod schemas reusable for API validation
 
 ## Next
-Run: foreman-cli tasks next
+Run: ralph-dev tasks next
 
 ---
 For details, see git log.

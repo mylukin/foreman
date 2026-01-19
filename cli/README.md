@@ -24,7 +24,7 @@ The Foreman CLI is a TypeScript-based command-line tool that provides fast, reli
 
 ```bash
 # Install dependencies
-cd foreman/cli
+cd ralph-dev/cli
 npm install
 
 # Build
@@ -34,7 +34,7 @@ npm run build
 npm link
 
 # Or use directly
-npx skillstore-foreman <command>
+npx ralph-dev <command>
 ```
 
 ---
@@ -71,7 +71,7 @@ cli/
 │       ├── go/
 │       └── rust/
 └── bin/
-    └── skillstore-foreman.js
+    └── ralph-dev.js
 ```
 
 ---
@@ -82,46 +82,46 @@ cli/
 
 ```bash
 # Get state value
-skillstore-foreman state get <key>
-skillstore-foreman state get phase
+ralph-dev state get <key>
+ralph-dev state get phase
 # Output: "implement"
 
 # Set state value
-skillstore-foreman state set <key> <value>
-skillstore-foreman state set phase deliver
+ralph-dev state set <key> <value>
+ralph-dev state set phase deliver
 
 # Update multiple values (JSON)
-skillstore-foreman state update '<json>'
-skillstore-foreman state update '{"autoFixes": 3}'
+ralph-dev state update '<json>'
+ralph-dev state update '{"autoFixes": 3}'
 
 # Show full state
-skillstore-foreman state show
-skillstore-foreman state show --json
+ralph-dev state show
+ralph-dev state show --json
 
 # Initialize state
-skillstore-foreman state init "<requirement>"
+ralph-dev state init "<requirement>"
 ```
 
 ### Task Management
 
 ```bash
 # List tasks
-skillstore-foreman tasks list
-skillstore-foreman tasks list --status pending
-skillstore-foreman tasks list --module auth
-skillstore-foreman tasks list --json
+ralph-dev tasks list
+ralph-dev tasks list --status pending
+ralph-dev tasks list --module auth
+ralph-dev tasks list --json
 
 # Get next task
-skillstore-foreman tasks next
-skillstore-foreman tasks next --json
+ralph-dev tasks next
+ralph-dev tasks next --json
 
 # Get specific task
-skillstore-foreman tasks get <task-id>
-skillstore-foreman tasks get auth.login.ui
-skillstore-foreman tasks get auth.login.ui --json
+ralph-dev tasks get <task-id>
+ralph-dev tasks get auth.login.ui
+ralph-dev tasks get auth.login.ui --json
 
 # Create task
-skillstore-foreman tasks create \
+ralph-dev tasks create \
   --id <id> \
   --module <module> \
   --title "<title>" \
@@ -130,89 +130,89 @@ skillstore-foreman tasks create \
   --estimated <minutes>
 
 # Mark complete
-skillstore-foreman tasks done <task-id> \
+ralph-dev tasks done <task-id> \
   --duration "<duration>" \
   --files "<comma-separated>"
 
 # Mark failed
-skillstore-foreman tasks fail <task-id> \
+ralph-dev tasks fail <task-id> \
   --reason "<reason>"
 
 # Update task
-skillstore-foreman tasks update <task-id> \
+ralph-dev tasks update <task-id> \
   --status <status> \
   --priority <number>
 
 # Show progress
-skillstore-foreman tasks progress
+ralph-dev tasks progress
 ```
 
 ### PRD Operations
 
 ```bash
 # Parse PRD
-skillstore-foreman prd parse <file>
-skillstore-foreman prd parse .foreman/prd.md
-skillstore-foreman prd parse .foreman/prd.md --json
+ralph-dev prd parse <file>
+ralph-dev prd parse .ralph-dev/prd.md
+ralph-dev prd parse .ralph-dev/prd.md --json
 
 # Generate tasks from PRD
-skillstore-foreman prd generate-tasks <file>
-skillstore-foreman prd generate-tasks .foreman/prd.md --output .foreman/tasks/
+ralph-dev prd generate-tasks <file>
+ralph-dev prd generate-tasks .ralph-dev/prd.md --output .ralph-dev/tasks/
 
 # Validate PRD
-skillstore-foreman prd validate <file>
+ralph-dev prd validate <file>
 ```
 
 ### Language Detection
 
 ```bash
 # Detect language
-skillstore-foreman detect language
-skillstore-foreman detect language --json
+ralph-dev detect language
+ralph-dev detect language --json
 
 # Detect framework
-skillstore-foreman detect framework
+ralph-dev detect framework
 
 # Detect test framework
-skillstore-foreman detect test-framework
+ralph-dev detect test-framework
 
 # Get verification commands
-skillstore-foreman detect verify-commands
-skillstore-foreman detect verify-commands --json
+ralph-dev detect verify-commands
+ralph-dev detect verify-commands --json
 ```
 
 ### Verification
 
 ```bash
 # Run verification
-skillstore-foreman verify
-skillstore-foreman verify --language typescript
-skillstore-foreman verify --language python
+ralph-dev verify
+ralph-dev verify --language typescript
+ralph-dev verify --language python
 
 # Custom commands
-skillstore-foreman verify --command "npm test" --command "npm run build"
+ralph-dev verify --command "npm test" --command "npm run build"
 
 # Parse test output
-skillstore-foreman verify parse-test-output <file>
+ralph-dev verify parse-test-output <file>
 ```
 
 ### Breakdown
 
 ```bash
 # Decompose user story
-skillstore-foreman breakdown story \
+ralph-dev breakdown story \
   --text "<story>" \
   --language <lang> \
   --tech-stack "<stack>"
 
 # Validate task size
-skillstore-foreman breakdown validate-size <task-file>
+ralph-dev breakdown validate-size <task-file>
 
 # Split oversized task
-skillstore-foreman breakdown split <task-file>
+ralph-dev breakdown split <task-file>
 
 # Validate all tasks
-skillstore-foreman breakdown validate-all <tasks-dir>
+ralph-dev breakdown validate-all <tasks-dir>
 ```
 
 ---
@@ -717,12 +717,12 @@ import { BreakdownCommands } from './commands/breakdown';
 const program = new Command();
 
 program
-  .name('skillstore-foreman')
+  .name('ralph-dev')
   .description('Foreman CLI - Efficient operations for AI agents')
   .version('2.1.0');
 
 // State management
-const state = program.command('state').description('Manage foreman state');
+const state = program.command('state').description('Manage ralph-dev state');
 StateCommands.register(state);
 
 // Task management
@@ -764,7 +764,7 @@ program.parse();
 
 while true; do
   # Get next task (CLI is much faster than parsing files)
-  TASK_JSON=$(skillstore-foreman tasks next --json)
+  TASK_JSON=$(ralph-dev tasks next --json)
 
   if [ "$TASK_JSON" = "null" ]; then
     echo "✅ All tasks complete"
@@ -781,18 +781,18 @@ while true; do
 
   # Update task using CLI (much faster than file editing)
   if [ "$result_status" = "success" ]; then
-    skillstore-foreman tasks done "$TASK_ID" \
+    ralph-dev tasks done "$TASK_ID" \
       --duration "$result_duration" \
       --files "$result_files"
     echo "✅ Task complete"
   else
-    skillstore-foreman tasks fail "$TASK_ID" \
+    ralph-dev tasks fail "$TASK_ID" \
       --reason "$result_error"
     echo "❌ Task failed"
   fi
 
   # Show progress (CLI formats it nicely)
-  skillstore-foreman tasks progress
+  ralph-dev tasks progress
 done
 ```
 ```

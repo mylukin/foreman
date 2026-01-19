@@ -1,6 +1,6 @@
 ---
 name: detect-language
-description: Autonomous language and framework detection for any programming language. Use when user asks to "detect language", "what language is this project", or when initializing foreman for a new project.
+description: Autonomous language and framework detection for any programming language. Use when user asks to "detect language", "what language is this project", or when initializing ralph-dev for a new project.
 allowed-tools: [Read, Glob, Bash, Task]
 user-invocable: true
 ---
@@ -17,7 +17,7 @@ Autonomously detect the programming language, framework, build tools, and verifi
 
 - User asks: "What language is this project?"
 - User asks: "Detect my project configuration"
-- Initializing foreman for a new project
+- Initializing ralph-dev for a new project
 - User runs: `/detect-language`
 
 ## Execution
@@ -192,7 +192,7 @@ After the agent returns the JSON result:
    RESULT='<json-output-from-agent>'
 
    # Save using CLI
-   skillstore-foreman detect-ai-save "$RESULT"
+   ralph-dev detect-ai-save "$RESULT"
    ```
 3. **Display to user**:
    ```markdown

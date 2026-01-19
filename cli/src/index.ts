@@ -13,7 +13,7 @@ const program = new Command();
 const workspaceDir = process.env.FOREMAN_WORKSPACE || process.cwd();
 
 program
-  .name('skillstore-foreman')
+  .name('ralph-dev')
   .description('CLI tool for Foreman - efficient operations for AI agents')
   .version(version);
 

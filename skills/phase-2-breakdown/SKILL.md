@@ -15,11 +15,11 @@ Read the PRD and break it down into atomic tasks (each <30 minutes), create modu
 
 ## When to Use
 
-Invoked by foreman-orchestrator as Phase 2, after Phase 1 (Clarify) completes.
+Invoked by dev-orchestrator as Phase 2, after Phase 1 (Clarify) completes.
 
 ## Input
 
-- PRD file location: `.foreman/prd.md`
+- PRD file location: `.ralph-dev/prd.md`
 - Current state from Phase 1
 
 ## Execution
@@ -43,7 +43,7 @@ echo ""
 
 ```bash
 # Read the PRD generated in Phase 1
-PRD_CONTENT=$(cat .foreman/prd.md)
+PRD_CONTENT=$(cat .ralph-dev/prd.md)
 
 echo "📖 Reading PRD..."
 echo "PRD length: $(echo "$PRD_CONTENT"
@@ -86,11 +86,11 @@ For each user story or requirement, create 1-3 atomic tasks.
 
 ### Step 4: Create Task Files Using CLI
 
-For each task, create task files using the skillstore-foreman:
+For each task, create task files using the ralph-dev:
 
 ```bash
 # Initialize tasks directory and index
-skillstore-foreman tasks init \
+ralph-dev tasks init \
   --project-goal "$(extract_goal_from_prd)" \
   --language "typescript" \
   --framework "Next.js"
@@ -98,7 +98,7 @@ skillstore-foreman tasks init \
 # Create each task using CLI
 # Example for auth.signup.ui:
 
-skillstore-foreman tasks create \
+ralph-dev tasks create \
   --id "auth.signup.ui" \
   --module "auth" \
   --priority 1 \
@@ -115,8 +115,8 @@ skillstore-foreman tasks create \
   --test-pattern "tests/auth/SignupForm.test.*"
 
 # CLI will:
-# 1. Create .foreman/tasks/auth/signup.ui.md with proper frontmatter
-# 2. Update .foreman/tasks/index.json automatically
+# 1. Create .ralph-dev/tasks/auth/signup.ui.md with proper frontmatter
+# 2. Update .ralph-dev/tasks/index.json automatically
 # 3. Show confirmation with file location
 
 # For each subsequent task, repeat the create command with different parameters
@@ -128,7 +128,7 @@ skillstore-foreman tasks create \
    Module: auth
    Priority: 1
    Estimated: 20 min
-   Location: .foreman/tasks/auth/signup.ui.md
+   Location: .ralph-dev/tasks/auth/signup.ui.md
 ```
 
 **Helper function to extract goal from PRD:**
@@ -136,7 +136,7 @@ skillstore-foreman tasks create \
 ```bash
 extract_goal_from_prd() {
   # Extract first paragraph under "## Project Overview"
-  sed -n '/## Project Overview/,/^##/p' .foreman/prd.md
+  sed -n '/## Project Overview/,/^##/p' .ralph-dev/prd.md
     sed '1d;$d'
     tr '\n' ' '
     sed 's/  */ /g'
@@ -219,7 +219,7 @@ Display the task plan in a readable format:
 Do you approve this task breakdown?
   A) Yes, proceed with implementation
   B) No, let me modify tasks manually
-  C) Cancel foreman
+  C) Cancel ralph-dev
 ```
 
 Use AskUserQuestion:
@@ -232,9 +232,9 @@ Use AskUserQuestion tool with:
     - label: "Yes, proceed"
       description: "Start implementing tasks as planned"
     - label: "Modify first"
-      description: "I'll edit tasks in .foreman/tasks/ before proceeding"
+      description: "I'll edit tasks in .ralph-dev/tasks/ before proceeding"
     - label: "Cancel"
-      description: "Stop foreman here"
+      description: "Stop ralph-dev here"
 ```
 
 ### Step 7: Handle User Response
@@ -245,18 +245,18 @@ USER_RESPONSE="$ANSWER"
 case "$USER_RESPONSE" in
   "Yes, proceed")
     echo "✅ Task breakdown approved"
-    skillstore-foreman state update --phase implement
+    ralph-dev state update --phase implement
     ;;
   "Modify first")
     echo "⏸️  Paused for manual task editing"
-    echo "📝 Edit files in: .foreman/tasks/"
-    echo "▶️  Resume with: /foreman resume"
-    skillstore-foreman state update --phase breakdown
+    echo "📝 Edit files in: .ralph-dev/tasks/"
+    echo "▶️  Resume with: /ralph-dev resume"
+    ralph-dev state update --phase breakdown
     exit 0
     ;;
   "Cancel")
     echo "❌ Foreman cancelled by user"
-    skillstore-foreman state clear
+    ralph-dev state clear
     exit 1
     ;;
 esac
@@ -271,7 +271,7 @@ Return structured result to orchestrator:
 phase: breakdown
 status: complete
 tasks_created: {N}
-tasks_dir: .foreman/tasks
+tasks_dir: .ralph-dev/tasks
 estimated_hours: {X}
 next_phase: implement
 summary: |
@@ -334,7 +334,7 @@ testRequirements:
 **Input PRD**: Task management app with auth
 
 **Output**:
-- 35 tasks created in `.foreman/tasks/`
+- 35 tasks created in `.ralph-dev/tasks/`
 - Modules: setup (4), auth (10), tasks (16), deployment (5)
 - Estimated time: 8.5 hours
 - Priority order: 1-35

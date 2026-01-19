@@ -15,7 +15,7 @@ Interactively clarify user requirements through structured questions, then gener
 
 ## When to Use
 
-Invoked by foreman-orchestrator as Phase 1 of the autonomous development workflow.
+Invoked by dev-orchestrator as Phase 1 of the autonomous development workflow.
 
 ## Input
 
@@ -190,23 +190,23 @@ Save the generated PRD to workspace:
 
 ```bash
 # Ensure workspace directory exists
-mkdir -p .foreman
+mkdir -p .ralph-dev
 
 # Save PRD
-cat > .foreman/prd.md <<'EOF'
+cat > .ralph-dev/prd.md <<'EOF'
 {GENERATED_PRD_CONTENT}
 EOF
 
-echo "✅ PRD saved to .foreman/prd.md"
+echo "✅ PRD saved to .ralph-dev/prd.md"
 ```
 
 ### Step 6: Update State
 
-Update foreman state to indicate Phase 1 complete:
+Update ralph-dev state to indicate Phase 1 complete:
 
 ```bash
 # Update state to breakdown phase
-skillstore-foreman state update --phase breakdown
+ralph-dev state update --phase breakdown
 
 echo "✅ Phase 1 (Clarify) complete"
 ```
@@ -219,7 +219,7 @@ Return structured result to orchestrator:
 ---PHASE RESULT---
 phase: clarify
 status: complete
-prd_file: .foreman/prd.md
+prd_file: .ralph-dev/prd.md
 next_phase: breakdown
 summary: |
   Generated PRD with {N} user stories across {M} epics.
@@ -283,7 +283,7 @@ A task management web application that allows users to create, organize, and tra
 1. **Ask minimum 3, maximum 5 questions** - Keep it concise
 2. **Use AskUserQuestion tool** - Don't ask questions in plain text
 3. **Generate comprehensive PRD** - Include all necessary sections
-4. **Save to .foreman/prd.md** - Standard location
+4. **Save to .ralph-dev/prd.md** - Standard location
 5. **Update state** - Always update to next phase
 6. **Return structured result** - Use YAML format
 

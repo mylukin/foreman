@@ -1,16 +1,16 @@
 {
-  "name": "foreman",
+  "name": "ralph-dev",
   "version": "2.1.0",
   "description": "Autonomous end-to-end development system - from requirement to production-ready code with zero manual intervention",
   "author": {
     "name": "Lukin",
     "email": "[email protected]"
   },
-  "homepage": "https://github.com/mylukin/foreman",
-  "repository": "https://github.com/mylukin/foreman",
+  "homepage": "https://github.com/mylukin/ralph-dev",
+  "repository": "https://github.com/mylukin/ralph-dev",
   "license": "MIT",
   "keywords": [
-    "foreman",
+    "ralph-dev",
     "autonomous",
     "ai-agent",
     "code-generation",

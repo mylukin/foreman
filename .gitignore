@@ -39,14 +39,14 @@ temp/
 .claude-plugin/.local/
 
 # Foreman - Ignore runtime state, keep documentation
-.foreman/state.json
-.foreman/progress.log
-.foreman/debug.log
-.foreman/tasks/index.json
+.ralph-dev/state.json
+.ralph-dev/progress.log
+.ralph-dev/debug.log
+.ralph-dev/tasks/index.json
 
 # Keep PRD and task definitions (valuable documentation)
-!.foreman/prd.md
-!.foreman/tasks/**/*.md
+!.ralph-dev/prd.md
+!.ralph-dev/tasks/**/*.md
 
 # Keep directory structure in repo template
 !workspace/.gitkeep

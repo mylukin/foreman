@@ -15,12 +15,12 @@ Autonomously implement all tasks using TDD workflow, spawning fresh agents for e
 
 ## When to Use
 
-Invoked by foreman-orchestrator as Phase 3, after Phase 2 (Breakdown) completes and user approves task plan.
+Invoked by dev-orchestrator as Phase 3, after Phase 2 (Breakdown) completes and user approves task plan.
 
 ## Input
 
-- Tasks directory: `.foreman/tasks/`
-- Task index: `.foreman/tasks/index.json`
+- Tasks directory: `.ralph-dev/tasks/`
+- Task index: `.ralph-dev/tasks/index.json`
 - Language config from index metadata
 
 ## Execution
@@ -46,7 +46,7 @@ echo ""
 
 ```bash
 # Get total task count from index
-TOTAL_TASKS=$(skillstore-foreman tasks list --json
+TOTAL_TASKS=$(ralph-dev tasks list --json
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🚀 Starting implementation of $TOTAL_TASKS tasks..."
@@ -87,7 +87,7 @@ while true; do
   # ═══════════════════════════════════════════
   # STEP 1: Get next pending task
   # ═══════════════════════════════════════════
-  TASK_JSON=$(skillstore-foreman tasks next --json 2>/dev/null)
+  TASK_JSON=$(ralph-dev tasks next --json 2>/dev/null)
 
   # ═══════════════════════════════════════════
   # STEP 2: Check if loop should exit
@@ -101,10 +101,10 @@ while true; do
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # Count tasks by status
-    PENDING_COUNT=$(skillstore-foreman tasks list --status pending --json 2>/dev/null
-    IN_PROGRESS_COUNT=$(skillstore-foreman tasks list --status in_progress --json 2>/dev/null
-    ACTUAL_COMPLETED=$(skillstore-foreman tasks list --status completed --json 2>/dev/null
-    ACTUAL_FAILED=$(skillstore-foreman tasks list --status failed --json 2>/dev/null
+    PENDING_COUNT=$(ralph-dev tasks list --status pending --json 2>/dev/null
+    IN_PROGRESS_COUNT=$(ralph-dev tasks list --status in_progress --json 2>/dev/null
+    ACTUAL_COMPLETED=$(ralph-dev tasks list --status completed --json 2>/dev/null
+    ACTUAL_FAILED=$(ralph-dev tasks list --status failed --json 2>/dev/null
 
     # Calculate totals
     ACCOUNTED_FOR=$((ACTUAL_COMPLETED + ACTUAL_FAILED))
@@ -126,7 +126,7 @@ while true; do
       echo "   But CLI returned no next task. This is a bug."
       echo ""
       echo "Pending tasks:"
-      skillstore-foreman tasks list --status pending
+      ralph-dev tasks list --status pending
       echo ""
       echo "CANNOT proceed to Phase 5. Fix required."
       exit 1
@@ -137,7 +137,7 @@ while true; do
       echo "   These tasks are stuck. This is a bug."
       echo ""
       echo "In-progress tasks:"
-      skillstore-foreman tasks list --status in_progress
+      ralph-dev tasks list --status in_progress
       echo ""
       echo "CANNOT proceed to Phase 5. Fix required."
       exit 1
@@ -180,7 +180,7 @@ while true; do
   echo ""
 
   # Mark task as started
-  skillstore-foreman tasks start "$TASK_ID"
+  ralph-dev tasks start "$TASK_ID"
 
   # Record start time
   START_TIME=$(date +%s)
@@ -216,7 +216,7 @@ while true; do
   if [ "$IMPLEMENTATION_SUCCESS" = true ]; then
     # Task succeeded
     COMPLETED_COUNT=$((COMPLETED_COUNT + 1))
-    skillstore-foreman tasks done "$TASK_ID" --duration "$DURATION_STR"
+    ralph-dev tasks done "$TASK_ID" --duration "$DURATION_STR"
 
     echo "✅ $TASK_ID completed"
     echo "   Duration: $DURATION_STR"
@@ -236,14 +236,14 @@ while true; do
       # Healing succeeded
       COMPLETED_COUNT=$((COMPLETED_COUNT + 1))
       HEALED_COUNT=$((HEALED_COUNT + 1))
-      skillstore-foreman tasks done "$TASK_ID" --duration "$DURATION_STR (healed)"
+      ralph-dev tasks done "$TASK_ID" --duration "$DURATION_STR (healed)"
 
       echo "✅ Auto-healed successfully!"
       echo ""
     else
       # Healing failed - mark as failed and continue
       FAILED_COUNT=$((FAILED_COUNT + 1))
-      skillstore-foreman tasks fail "$TASK_ID" --reason "Implementation and healing failed"
+      ralph-dev tasks fail "$TASK_ID" --reason "Implementation and healing failed"
 
       echo "❌ Could not heal. Marked as failed."
       echo "   Will continue with remaining tasks."
@@ -293,7 +293,7 @@ done
 
 1. **Get task details from CLI:**
    ```bash
-   TASK_JSON=$(skillstore-foreman tasks next --json)
+   TASK_JSON=$(ralph-dev tasks next --json)
    TASK_ID=$(echo "$TASK_JSON"
    ```
 
@@ -338,7 +338,7 @@ done
 Use this exact template when spawning implementer agents:
 
 ```markdown
-You are an autonomous implementer agent for a single task in an foreman workflow.
+You are an autonomous implementer agent for a single task in an ralph-dev workflow.
 
 ## TASK INFORMATION
 
@@ -531,7 +531,7 @@ echo ""
 
 if [ $FAILED -gt 0 ]; then
   echo "⚠️  Some tasks failed. They are marked with status='failed'."
-  echo "   Review failed tasks in .foreman/tasks/"
+  echo "   Review failed tasks in .ralph-dev/tasks/"
   echo ""
 fi
 
@@ -542,7 +542,7 @@ echo "▶️  Next: Phase 5 (Deliver) - Quality gates and PR creation"
 
 ```bash
 # Update state to deliver phase
-skillstore-foreman state update --phase deliver
+ralph-dev state update --phase deliver
 ```
 
 ### Step 7: Return Result

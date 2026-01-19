@@ -46,7 +46,7 @@ echo "🔍 Phase 1: Root Cause Investigation"
 echo ""
 
 # Get task details
-TASK_JSON=$(skillstore-foreman tasks get "$TASK_ID" --json)
+TASK_JSON=$(ralph-dev tasks get "$TASK_ID" --json)
 TASK_DESC=$(echo "$TASK_JSON"
 
 echo "Task: $TASK_ID"

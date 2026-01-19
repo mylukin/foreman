@@ -51,12 +51,12 @@ Foreman 是一个用于 Claude Code 的自主端到端开发系统，能够将�
 
 2. **安装插件** (5分钟)
    ```bash
-   ln -s $(pwd) ~/.claude/plugins/foreman
+   ln -s $(pwd) ~/.claude/plugins/ralph-dev
    ```
 
 3. **测试基础功能** (10分钟)
    ```
-   /foreman "Build a TODO app"
+   /ralph-dev "Build a TODO app"
    /detect-language
    ```
 
@@ -89,7 +89,7 @@ Foreman 是一个用于 Claude Code 的自主端到端开发系统，能够将�
 ### 启动自主开发
 
 ```
-/foreman "构建一个带用户认证的任务管理应用"
+/ralph-dev "构建一个带用户认证的任务管理应用"
 ```
 
 Foreman 会:
@@ -127,7 +127,7 @@ Phase 4: HEAL         Phase 5: DELIVER
 ## 项目结构
 
 ```
-foreman/
+ralph-dev/
 ├── cli/                               # TypeScript CLI 工具
 │   ├── src/
 │   │   ├── commands/                  # state, tasks, detect
@@ -136,7 +136,7 @@ foreman/
 │   └── package.json
 │
 ├── skills/                            # 工作流 Skills
-│   ├── foreman-orchestrator/        # 主编排器
+│   ├── dev-orchestrator/        # 主编排器
 │   ├── detect-language/               # AI 语言检测
 │   ├── phase-1-clarify/               # ⏳ 待实现
 │   ├── phase-2-breakdown/             # ⏳ 待实现
@@ -148,14 +148,14 @@ foreman/
 │   └── language-detector.md          # 语言检测 agent
 │
 ├── commands/
-│   └── foreman.md                   # /foreman 命令
+│   └── ralph-dev.md                   # /ralph-dev 命令
 │
 ├── .claude-plugin/
 │   ├── plugin.json                    # 插件配置
 │   └── marketplace.json               # 市场列表
 │
 └── workspace/                         # 示例工作区
-    └── .foreman/
+    └── .ralph-dev/
         └── tasks/                     # 模块化任务存储
 ```
 
@@ -216,7 +216,7 @@ foreman/
 7. **自愈** - 使用 WebSearch 自主修复错误
 8. **两阶段审查** - 规范合规性先于代码质量
 9. **状态持久化** - 可从任何中断处恢复
-10. **可扩展存储** - 模块化任务文件（agent-foreman 模式）
+10. **可扩展存储** - 模块化任务文件（agent-ralph-dev 模式）
 
 ---
 
@@ -238,7 +238,7 @@ foreman/
 
 - **ralph-ryan** - 新鲜上下文模式、交互式 PRD 生成
 - **superpowers** - TDD Iron Law、系统化调试、验证
-- **agent-foreman** - 任务管理 CLI、工作流强制执行
+- **agent-ralph-dev** - 任务管理 CLI、工作流强制执行
 
 ---
 
@@ -257,8 +257,8 @@ MIT License - 查看 LICENSE 文件
 ## 支持
 
 - 📖 文档: [docs/](docs/)
-- 🐛 问题: [GitHub Issues](https://github.com/mylukin/foreman/issues)
-- 💬 讨论: [GitHub Discussions](https://github.com/mylukin/foreman/discussions)
+- 🐛 问题: [GitHub Issues](https://github.com/mylukin/ralph-dev/issues)
+- 💬 讨论: [GitHub Discussions](https://github.com/mylukin/ralph-dev/discussions)
 
 ---
 

@@ -21,4 +21,4 @@ Don't commit `state.json` or log files.
 
 ## Multi-Session Note
 
-Only one active foreman session per directory is supported in the current version.
+Only one active ralph-dev session per directory is supported in the current version.

@@ -13,21 +13,21 @@ interface State {
 }
 
 export function registerStateCommands(program: Command, workspaceDir: string): void {
-  const stateFile = path.join(workspaceDir, '.foreman', 'state.json');
+  const stateFile = path.join(workspaceDir, '.ralph-dev', 'state.json');
 
-  const state = program.command('state').description('Manage foreman state');
+  const state = program.command('state').description('Manage ralph-dev state');
 
   // Get current state
   state
     .command('get')
-    .description('Get current foreman state')
+    .description('Get current ralph-dev state')
     .option('--json', 'Output as JSON')
     .action((options) => {
       if (!fs.existsSync(stateFile)) {
         if (options.json) {
           console.log(JSON.stringify({ phase: 'none' }, null, 2));
         } else {
-          console.log(chalk.yellow('No active foreman session'));
+          console.log(chalk.yellow('No active ralph-dev session'));
         }
         return;
       }
@@ -50,7 +50,7 @@ export function registerStateCommands(program: Command, workspaceDir: string): v
   // Set state
   state
     .command('set')
-    .description('Set foreman state')
+    .description('Set ralph-dev state')
     .requiredOption('-p, --phase <phase>', 'Current phase')
     .option('-t, --task <taskId>', 'Current task ID')
     .action((options) => {
@@ -108,7 +108,7 @@ export function registerStateCommands(program: Command, workspaceDir: string): v
   // Clear state
   state
     .command('clear')
-    .description('Clear foreman state')
+    .description('Clear ralph-dev state')
     .action(() => {
       if (fs.existsSync(stateFile)) {
         fs.removeSync(stateFile);

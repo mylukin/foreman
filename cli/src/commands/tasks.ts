@@ -8,7 +8,7 @@ import { TaskWriter } from '../core/task-writer';
 import { IndexManager } from '../core/index-manager';
 
 export function registerTaskCommands(program: Command, workspaceDir: string): void {
-  const tasksDir = path.join(workspaceDir, '.foreman', 'tasks');
+  const tasksDir = path.join(workspaceDir, '.ralph-dev', 'tasks');
   const indexManager = new IndexManager(tasksDir);
 
   const tasks = program.command('tasks').description('Manage tasks');
@@ -104,8 +104,8 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
         taskList.forEach(([id, task]) => {
           const statusColor =
             task.status === 'completed' ? 'green' :
-            task.status === 'in_progress' ? 'yellow' :
-            task.status === 'failed' ? 'red' : 'gray';
+              task.status === 'in_progress' ? 'yellow' :
+                task.status === 'failed' ? 'red' : 'gray';
 
           console.log(
             `  ${chalk[statusColor](`[${task.status}]`)} ` +
@@ -160,7 +160,7 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
       }
 
       // 3. State context
-      const stateFile = path.join(workspaceDir, '.foreman', 'state.json');
+      const stateFile = path.join(workspaceDir, '.ralph-dev', 'state.json');
       if (fs.existsSync(stateFile)) {
         context.state = fs.readJSONSync(stateFile);
       }
@@ -184,7 +184,7 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
       };
 
       // 5. Recent activity from progress.log
-      const progressLog = path.join(workspaceDir, '.foreman', 'progress.log');
+      const progressLog = path.join(workspaceDir, '.ralph-dev', 'progress.log');
       context.recentActivity = [];
       if (fs.existsSync(progressLog)) {
         try {
