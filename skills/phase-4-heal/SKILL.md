@@ -41,7 +41,7 @@ echo ""
 
 # Get task details
 TASK_JSON=$(ralph-dev tasks get "$TASK_ID" --json)
-TASK_DESC=$(echo "$TASK_JSON"
+TASK_DESC=$(echo "$TASK_JSON" | jq -r '.data.description // .description // "No description"')
 
 echo "Task: $TASK_ID"
 echo "Description: $TASK_DESC"
@@ -70,7 +70,7 @@ echo "STEP 2: Reproduce Consistently"
 echo ""
 
 # Determine test command from task
-TEST_PATTERN=$(echo "$TASK_JSON"
+TEST_PATTERN=$(echo "$TASK_JSON" | jq -r '.data.testRequirements.unit.pattern // .testRequirements.unit.pattern // "**/*.test.*"')
 echo "Running: npm test -- $TEST_PATTERN"
 echo ""
 
@@ -159,7 +159,7 @@ if [ -n "$WORKING_EXAMPLES" ]; then
   echo "STEP 2: Comparing working vs broken code..."
   echo ""
 
-  FIRST_EXAMPLE=$(echo "$WORKING_EXAMPLES"
+  FIRST_EXAMPLE=$(echo "$WORKING_EXAMPLES" | head -1)
   echo "Working example: $FIRST_EXAMPLE"
   echo "Broken code: $ERROR_FILE"
   echo ""
@@ -174,7 +174,7 @@ echo "STEP 3: Checking dependencies..."
 echo ""
 
 # Extract module name from error
-MODULE_NAME=$(echo "$ERROR_MSG" | grep -oP "Module '.*?'"
+MODULE_NAME=$(echo "$ERROR_MSG" | grep -oP "Module '.*?'" | head -1)
 
 if [ -n "$MODULE_NAME" ]; then
   echo "Missing module: $MODULE_NAME"

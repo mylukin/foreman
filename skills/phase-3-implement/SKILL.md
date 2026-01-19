@@ -301,10 +301,10 @@ while true; do
   # ═══════════════════════════════════════════
 
   # Extract task details from enhanced next output
-  TASK_ID=$(echo "$TASK_JSON"
-  TASK_DESC=$(echo "$TASK_JSON"
-  TASK_PRIORITY=$(echo "$TASK_JSON"
-  TASK_EST_MIN=$(echo "$TASK_JSON"
+  TASK_ID=$(echo "$TASK_JSON" | jq -r '.data.task.id // .data.id // "unknown"')
+  TASK_DESC=$(echo "$TASK_JSON" | jq -r '.data.task.description // .data.description // "No description"')
+  TASK_PRIORITY=$(echo "$TASK_JSON" | jq -r '.data.task.priority // .data.priority // 0')
+  TASK_EST_MIN=$(echo "$TASK_JSON" | jq -r '.data.task.estimatedMinutes // .data.estimatedMinutes // 30')
 
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -504,7 +504,7 @@ done
 1. **Get task details from CLI:**
    ```bash
    TASK_JSON=$(ralph-dev tasks next --json)
-   TASK_ID=$(echo "$TASK_JSON"
+   TASK_ID=$(echo "$TASK_JSON" | jq -r '.data.task.id // .data.id')
    ```
 
 2. **Build implementer prompt:**
