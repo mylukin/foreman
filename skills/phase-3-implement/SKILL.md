@@ -317,12 +317,62 @@ while true; do
   # Build full implementer prompt from template in Step 3
   # Then invoke Task tool (see Step 3 instructions)
 
-  # For now, this is a placeholder showing the flow
-  # The actual Task tool invocation is documented in Step 3
+  # IMPORTANT: Capture the full agent output
+  # Example: Use Task tool and capture result in AGENT_OUTPUT variable
+  # AGENT_OUTPUT will contain the agent's full response including structured result block
 
-  # Simulating task completion for pseudocode flow
-  # In real execution, you'll capture result from Task tool
-  IMPLEMENTATION_SUCCESS=true  # Replace with actual Task tool result
+  # ═══════════════════════════════════════════
+  # STEP 4.1: Parse structured result from agent output
+  # ═══════════════════════════════════════════
+
+  echo "📊 Parsing implementation result..."
+
+  # Extract structured result block from agent output
+  # Look for lines between ---IMPLEMENTATION RESULT--- and ---END IMPLEMENTATION RESULT---
+  RESULT_BLOCK=$(echo "$AGENT_OUTPUT" | sed -n '/^---IMPLEMENTATION RESULT---$/,/^---END IMPLEMENTATION RESULT---$/p')
+
+  # Parse individual fields from result block
+  TASK_STATUS=$(echo "$RESULT_BLOCK" | grep "^status:" | cut -d: -f2 | tr -d ' ')
+  VERIFICATION_PASSED=$(echo "$RESULT_BLOCK" | grep "^verification_passed:" | cut -d: -f2 | tr -d ' ')
+  FILES_MODIFIED=$(echo "$RESULT_BLOCK" | grep "^files_modified:" | cut -d: -f2-)
+  AGENT_NOTES=$(echo "$RESULT_BLOCK" | grep "^notes:" | cut -d: -f2-)
+
+  # Validate result block exists
+  if [ -z "$TASK_STATUS" ]; then
+    echo "❌ CRITICAL ERROR: Agent did not return structured result!"
+    echo "   This indicates the agent stopped unexpectedly."
+    echo "   Common causes:"
+    echo "   - Agent asked a question (violating autonomous decision-making rule)"
+    echo "   - Agent encountered error and exited without result block"
+    echo "   - Agent output format was incorrect"
+    echo ""
+    echo "Last 50 lines of agent output:"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "$AGENT_OUTPUT" | tail -50
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Marking task as failed and continuing with next task..."
+    ralph-dev tasks fail "$TASK_ID" --reason "Agent terminated without structured result (possible question or crash)"
+    IMPLEMENTATION_SUCCESS=false
+  elif [ "$TASK_STATUS" = "success" ] && [ "$VERIFICATION_PASSED" = "true" ]; then
+    # Task succeeded
+    IMPLEMENTATION_SUCCESS=true
+    echo "✅ Agent reported success"
+    if [ -n "$AGENT_NOTES" ]; then
+      echo "   Notes: $AGENT_NOTES"
+    fi
+  else
+    # Task failed - will attempt healing
+    IMPLEMENTATION_SUCCESS=false
+    echo "⚠️  Agent reported failure or verification did not pass"
+    echo "   Status: $TASK_STATUS"
+    echo "   Verification passed: $VERIFICATION_PASSED"
+    if [ -n "$AGENT_NOTES" ]; then
+      echo "   Notes: $AGENT_NOTES"
+    fi
+  fi
+
+  echo ""
 
   # Record end time
   END_TIME=$(date +%s)
@@ -332,7 +382,7 @@ while true; do
   DURATION_STR="${DURATION_MIN}m ${DURATION_SEC}s"
 
   # ═══════════════════════════════════════════
-  # STEP 5: Handle result
+  # STEP 5: Handle result (based on structured output)
   # ═══════════════════════════════════════════
   if [ "$IMPLEMENTATION_SUCCESS" = true ]; then
     # Task succeeded
@@ -393,6 +443,25 @@ while true; do
     echo "✅ All $TOTAL_TASKS tasks processed. Exiting loop."
     break
   fi
+
+  # ═══════════════════════════════════════════
+  # STEP 8: Continue loop (EXPLICIT INSTRUCTION)
+  # ═══════════════════════════════════════════
+  # Go to next iteration (NOT step 1, go back to while loop start)
+  # Continue to STEP 1 in loop (get next pending task)
+  #
+  # DO NOT stop the loop for:
+  #   - Agent errors (caught by result parsing)
+  #   - Verification failures (will attempt healing)
+  #   - Missing dependencies (agent handles autonomously)
+  #   - Any unexpected agent output (caught by result validation)
+  #   - Agent asking questions (caught as missing result block)
+  #
+  # ONLY stop the loop when:
+  #   - All tasks accounted for: completed + failed == total tasks
+  #   - OR infinite loop safety limit reached
+  #
+  # Continue to next task now...
 done
 ```
 
@@ -403,6 +472,7 @@ done
 3. **If tasks are stuck** in pending/in_progress, loop will error (not silently fail)
 4. **Infinite loop protection** prevents runaway execution
 5. **Each task MUST use Task tool** to spawn subagent (see Step 3)
+6. **Agent questions are caught** by result parsing - loop continues automatically
 
 ### Step 3: Implement Single Task
 
@@ -575,16 +645,71 @@ If you catch yourself:
 - Keep code clean and simple
 - One test → One minimal implementation → Refactor → Repeat
 
-## OUTPUT REQUIREMENTS
+## AUTONOMOUS DECISION MAKING (MANDATORY)
 
-When done, report:
+**You MUST make decisions autonomously. NEVER ask the user questions during implementation.**
+
+| Situation | Autonomous Action |
+|-----------|-------------------|
+| Ambiguous requirement | Make a reasonable interpretation, document in code comments, proceed |
+| Missing file or dependency | Create it with sensible defaults, proceed |
+| Multiple implementation options | Choose the simplest approach that satisfies acceptance criteria, proceed |
+| Unclear acceptance criteria | Interpret literally based on PRD context, proceed |
+| Test failure | Debug and fix, proceed (healing phase will help if needed) |
+| Verification failure | Return result with notes, let orchestrator decide |
+| Any unexpected error | Log it in output notes, proceed with best effort |
+
+### Forbidden Phrases (NEVER output these)
+
+❌ "Should I...?"
+❌ "Do you want me to...?"
+❌ "Which approach would you prefer?"
+❌ "I need clarification on..."
+❌ "Before I proceed, could you..."
+❌ "Can you confirm..."
+❌ "What should I do about..."
+
+**Why:** Questions stop your execution. The orchestrator will handle escalation if truly blocked.
+Make reasonable decisions, document them, and proceed. The code review phase will catch issues.
+
+## OUTPUT REQUIREMENTS (MANDATORY)
+
+**You MUST output results in this EXACT format at the end of your response:**
+
+```yaml
+---IMPLEMENTATION RESULT---
+task_id: {task.id}
+status: success|failed
+verification_passed: true|false
+tests_passing: {number passing}/{total tests}
+coverage: {percentage}%
+files_modified: {comma-separated list}
+duration: {actual time}
+acceptance_criteria_met: {X/Y criteria satisfied}
+notes: {brief summary of what was done, decisions made, or issues encountered}
+---END IMPLEMENTATION RESULT---
+```
+
+**Status definitions:**
+- `success`: All acceptance criteria met, all tests pass
+- `failed`: Could not complete due to blocking issue, tests fail
+
+**Notes field:** Use this to document:
+- Decisions you made autonomously
+- Alternative approaches you considered
+- Any assumptions made from ambiguous requirements
+- Issues that need review (but didn't block you)
+
+**CRITICAL:** Always output the result block at the end of your response, even if you encounter errors.
+This tells the orchestrator what happened and allows it to continue.
+
+**Additional reporting:**
+When done, also report in natural language:
 1. **Files created/modified** (list all)
 2. **Test results** (X/Y tests passed, Z% coverage)
 3. **Duration** (actual time spent)
 4. **Issues encountered** (if any)
 5. **All acceptance criteria met** (confirm with checkboxes)
-
-**CRITICAL:** Do NOT exit until ALL acceptance criteria are satisfied and ALL tests pass.
 
 Start with RED phase now.
 ```
@@ -615,16 +740,55 @@ Start with RED phase now.
    - WebSearch for error solution
    - Apply fix automatically
    - Re-run tests
-   - Return success/failure
+   - Return structured result with success/failure status
 
-3. **Check healing result:**
-   - If healed successfully (tests pass):
+3. **Parse healing result:**
+
+   **CRITICAL:** Extract structured result from heal skill output:
+
+   ```bash
+   # Capture heal skill output
+   HEAL_OUTPUT="<captured from Skill tool result>"
+
+   # Extract structured result block
+   HEAL_RESULT_BLOCK=$(echo "$HEAL_OUTPUT" | sed -n '/^---HEALING RESULT---$/,/^---END HEALING RESULT---$/p')
+
+   # Parse fields
+   HEAL_STATUS=$(echo "$HEAL_RESULT_BLOCK" | grep "^status:" | cut -d: -f2 | tr -d ' ')
+   HEAL_VERIFICATION=$(echo "$HEAL_RESULT_BLOCK" | grep "^verification_passed:" | cut -d: -f2 | tr -d ' ')
+   HEAL_ATTEMPTS=$(echo "$HEAL_RESULT_BLOCK" | grep "^attempts:" | cut -d: -f2 | tr -d ' ')
+   HEAL_NOTES=$(echo "$HEAL_RESULT_BLOCK" | grep "^notes:" | cut -d: -f2-)
+
+   # Validate and handle result
+   if [ -z "$HEAL_STATUS" ]; then
+     echo "❌ ERROR: Heal skill did not return structured result"
+     echo "   Marking task as failed..."
+     HEAL_SUCCESS=false
+   elif [ "$HEAL_STATUS" = "success" ] && [ "$HEAL_VERIFICATION" = "true" ]; then
+     echo "✅ Healing succeeded after $HEAL_ATTEMPTS attempt(s)"
+     if [ -n "$HEAL_NOTES" ]; then
+       echo "   Notes: $HEAL_NOTES"
+     fi
+     HEAL_SUCCESS=true
+   else
+     echo "❌ Healing failed"
+     echo "   Status: $HEAL_STATUS"
+     echo "   Attempts: $HEAL_ATTEMPTS"
+     if [ -n "$HEAL_NOTES" ]; then
+       echo "   Notes: $HEAL_NOTES"
+     fi
+     HEAL_SUCCESS=false
+   fi
+   ```
+
+4. **Handle healing result:**
+   - If healed successfully (HEAL_SUCCESS=true):
      * Mark task as completed
      * Increment auto-healed counter
      * Log to debug.log
      * Continue to next task
 
-   - If healing failed (still errors after 3 attempts):
+   - If healing failed (HEAL_SUCCESS=false):
      * Mark task as failed
      * Log detailed error to debug.log
      * Continue to next task (don't block entire workflow)

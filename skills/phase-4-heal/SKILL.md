@@ -359,6 +359,20 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
     echo "   Fix type: $FIX_TYPE"
     echo "   Hypothesis: $HYPOTHESIS"
     echo ""
+
+    # Output structured result for orchestrator
+    echo ""
+    echo "---HEALING RESULT---"
+    echo "task_id: $TASK_ID"
+    echo "status: success"
+    echo "verification_passed: true"
+    echo "attempts: $ATTEMPT"
+    echo "fix_type: $FIX_TYPE"
+    echo "hypothesis: $HYPOTHESIS"
+    echo "notes: Fix verified by tests. Error resolved after $ATTEMPT attempt(s)."
+    echo "---END HEALING RESULT---"
+    echo ""
+
     return 0
   else
     echo "❌ VERIFIED: Fix failed (see test output above)"
@@ -384,6 +398,19 @@ echo "💡 Manual intervention required:"
 echo "   - Review Phase 1-3 investigation above"
 echo "   - Error may indicate architectural issue"
 echo "   - Task marked as 'failed' for manual review"
+echo ""
+
+# Output structured result for orchestrator
+echo ""
+echo "---HEALING RESULT---"
+echo "task_id: $TASK_ID"
+echo "status: failed"
+echo "verification_passed: false"
+echo "attempts: $MAX_ATTEMPTS"
+echo "fix_type: $FIX_TYPE"
+echo "hypothesis: $HYPOTHESIS"
+echo "notes: Healing failed after $MAX_ATTEMPTS attempts. Manual intervention required. Error may indicate architectural issue."
+echo "---END HEALING RESULT---"
 echo ""
 
 return 1
