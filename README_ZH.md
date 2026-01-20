@@ -62,7 +62,7 @@ Ralph-dev 将引导你完成：
 - 使用 WebSearch 调查错误
 - 基于研究应用修复
 - 重新运行验证命令
-- 在升级前最多重试 3 次
+- 最多重试 5 次后升级（熔断器模式）
 
 ### 安全功能
 受 [Superpowers](https://github.com/coleam00/superpowers) 启发：
@@ -106,7 +106,7 @@ Ralph-dev 将引导你完成：
 - 在阶段 3 任务失败时触发
 - 使用 WebSearch 研究错误解决方案
 - 应用修复并重新运行验证
-- 每个错误最多 3 次重试
+- 每个错误最多 5 次重试（熔断器）
 
 **阶段 5：交付（DELIVER）**
 - 技能：`skills/phase-5-deliver/`
@@ -130,7 +130,11 @@ ralph-dev/
 │   │   ├── core/
 │   │   │   ├── task-parser.ts      # 解析 YAML 前置元数据
 │   │   │   ├── task-writer.ts      # 写入任务文件
-│   │   │   └── index-manager.ts    # 管理任务索引
+│   │   │   └── circuit-breaker.ts  # 熔断器故障保护模式
+│   │   ├── repositories/
+│   │   │   ├── task-repository.service.ts    # 任务持久化
+│   │   │   ├── state-repository.service.ts   # 状态持久化
+│   │   │   └── index-repository.service.ts   # 任务索引管理
 │   │   └── language/
 │   │       └── detector.ts   # 多语言检测
 │   └── bin/

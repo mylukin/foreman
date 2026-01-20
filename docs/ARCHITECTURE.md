@@ -1,836 +1,557 @@
-# Ralph-dev System Architecture
+# Ralph-dev Architecture
 
-Comprehensive architecture documentation for the autonomous end-to-end development system.
-> 自主端到端开发系统的综合架构文档。
+> Autonomous end-to-end development system integrated with Claude Code. Transforms natural language requirements into production-ready, tested code through a 5-phase workflow.
 
----
+## Overview
 
-## Table of Contents
+Ralph-dev is a TypeScript-based CLI tool that orchestrates AI agents through a structured development workflow. It enables autonomous code generation with TDD enforcement, automatic error recovery, and context-compression resilience.
 
-1. [Overview](#1-overview)
-2. [System Architecture](#2-system-architecture)
-3. [5-Phase Workflow](#3-5-phase-workflow)
-4. [CLI Layered Architecture](#4-cli-layered-architecture)
-5. [Skills System](#5-skills-system)
-6. [Plugin Infrastructure](#6-plugin-infrastructure)
-7. [Data Flow](#7-data-flow)
-8. [Directory Structure](#8-directory-structure)
-9. [Error Handling & Recovery](#9-error-handling--recovery)
-10. [Technology Stack](#10-technology-stack)
+**Key Features:**
+- 5-phase development workflow (Clarify → Breakdown → Implement ⇄ Heal → Deliver)
+- Test-Driven Development enforcement
+- Circuit breaker pattern for error recovery
+- Fresh agent context per task
+- State persistence for session recovery
+- Multi-language support (12+ languages/frameworks)
 
----
-
-## 1. Overview
-
-Ralph-dev is an **autonomous end-to-end development system** that transforms natural language requirements into production-ready, tested code through a 5-phase workflow.
-> Ralph-dev 是一个**自主端到端开发系统**，通过 5 阶段工作流将自然语言需求转换为生产就绪的测试代码。
-
-**Key Characteristics:**
-- **State-Driven**: All progress persisted via CLI, survives context compression
-- **TDD Enforcement**: Write failing tests first, then implement
-- **Fresh Agent Context**: Each task uses isolated subagent
-- **Self-Healing**: Automatic error recovery with circuit breaker
-- **Multi-Language**: Supports TypeScript, Python, Go, Rust, Java, and more
-
----
-
-## 2. System Architecture
-
-### High-Level Component Diagram
+## Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           RALPH-DEV SYSTEM                                  │
-├─────────────────────────────────────────────────────────────────────────────┤
+│                              User Interface                                  │
 │                                                                             │
-│   ┌───────────────┐    ┌───────────────┐    ┌───────────────┐              │
-│   │  Claude Code  │◄──►│  Plugin Layer │◄──►│  Skills Layer │              │
-│   │    (Host)     │    │(.claude-plugin)│    │   (skills/)   │              │
-│   └───────────────┘    └───────────────┘    └───────────────┘              │
-│          │                     │                    │                       │
-│          │                     │                    │                       │
-│          ▼                     ▼                    ▼                       │
-│   ┌─────────────────────────────────────────────────────────────┐          │
-│   │                    CLI Tool (cli/)                           │          │
-│   │  ┌─────────┐  ┌──────────┐  ┌────────────┐  ┌────────────┐  │          │
-│   │  │Commands │─►│ Services │─►│Repositories│─►│   Domain   │  │          │
-│   │  └─────────┘  └──────────┘  └────────────┘  └────────────┘  │          │
-│   │                                    │                         │          │
-│   │                                    ▼                         │          │
-│   │                           ┌────────────────┐                 │          │
-│   │                           │ Infrastructure │                 │          │
-│   │                           └────────────────┘                 │          │
-│   └─────────────────────────────────────────────────────────────┘          │
-│          │                                                                  │
-│          ▼                                                                  │
-│   ┌─────────────────────────────────────────────────────────────┐          │
-│   │                  Workspace (.ralph-dev/)                     │          │
-│   │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │          │
-│   │  │state.json│  │  prd.md  │  │  tasks/  │  │  logs/   │    │          │
-│   │  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │          │
-│   └─────────────────────────────────────────────────────────────┘          │
+│    /ralph-dev "requirement"  ───────────────────────────────────────────►   │
 │                                                                             │
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Claude Code Plugin Layer                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────┐  │
+│  │ commands/       │  │ .claude-plugin/ │  │ skills/                     │  │
+│  │ ralph-dev.md    │  │ plugin.json     │  │ phase-1-clarify/SKILL.md   │  │
+│  │ (entry point)   │  │ hooks/          │  │ phase-2-breakdown/SKILL.md │  │
+│  └────────┬────────┘  │  ├─session-start│  │ phase-3-implement/SKILL.md │  │
+│           │           │  ├─pre-compact  │  │ phase-4-heal/SKILL.md      │  │
+│           │           │  └─stop-hook    │  │ phase-5-deliver/SKILL.md   │  │
+│           │           └─────────────────┘  │ dev-orchestrator/SKILL.md  │  │
+│           │                                └──────────────┬──────────────┘  │
+└───────────┼───────────────────────────────────────────────┼─────────────────┘
+            │                                               │
+            │  ┌────────────────────────────────────────────┘
+            │  │  source shared/bootstrap-cli.sh
+            ▼  ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CLI Layer (cli/)                                │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                      Commands (cli/src/commands/)                    │   │
+│  │  state.ts │ tasks.ts │ status.ts │ detect.ts │ init.ts │ circuit-   │   │
+│  │           │          │           │           │         │ breaker.ts │   │
+│  └─────────────────────────────────┬───────────────────────────────────┘   │
+│                                    │ service-factory.ts (DI)               │
+│                                    ▼                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                      Services (cli/src/services/)                    │   │
+│  │  task-service.ts │ state-service.ts │ status-service.ts │           │   │
+│  │  context-service.ts │ detection-service.ts │ healing-service.ts     │   │
+│  └─────────────────────────────────┬───────────────────────────────────┘   │
+│                                    ▼                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                   Repositories (cli/src/repositories/)               │   │
+│  │  task-repository.service.ts │ state-repository.service.ts │         │   │
+│  │  index-repository.service.ts                                         │   │
+│  └─────────────────────────────────┬───────────────────────────────────┘   │
+│                                    ▼                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                       Domain (cli/src/domain/)                       │   │
+│  │         task-entity.ts │ state-entity.ts │ language-config.ts       │   │
+│  └─────────────────────────────────┬───────────────────────────────────┘   │
+│                                    ▼                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                  Infrastructure (cli/src/infrastructure/)            │   │
+│  │           file-system.service.ts │ logger.service.ts                 │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                        Core (cli/src/core/)                          │   │
+│  │  circuit-breaker.ts │ task-parser.ts │ task-writer.ts │ retry.ts    │   │
+│  │  exit-codes.ts │ response-wrapper.ts │ error-handler.ts             │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Workspace (.ralph-dev/)                              │
+│  ┌──────────────┐  ┌─────────────────────────────────┐  ┌───────────────┐   │
+│  │ state.json   │  │ tasks/                          │  │ prd.md        │   │
+│  │ (phase,task) │  │  ├─index.json                   │  │ (requirements)│   │
+│  └──────────────┘  │  ├─{module}/                    │  └───────────────┘   │
+│                    │  │  └─{task-id}.md              │                      │
+│  ┌──────────────┐  └─────────────────────────────────┘  ┌───────────────┐   │
+│  │language.json │                                       │ saga.log      │   │
+│  │ (detection)  │                                       │ (audit trail) │   │
+│  └──────────────┘                                       └───────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Component Responsibilities
+## Workflow State Machine
 
-| Component | Location | Responsibility |
-|-----------|----------|----------------|
-| **Claude Code** | Host IDE | AI assistant runtime environment |
-| **Plugin Layer** | `.claude-plugin/` | Session hooks, CLI bootstrap, marketplace metadata |
-| **Skills Layer** | `skills/` | Phase-specific AI agent workflows |
-| **CLI Tool** | `cli/` | State & task management, language detection |
-| **Shared** | `shared/` | Bootstrap scripts, CLI fallback utilities |
-| **Commands** | `commands/` | User-invocable slash commands |
-| **Workspace** | `.ralph-dev/` | Runtime state, tasks, PRD, logs |
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           Phase State Machine                                 │
+│                                                                              │
+│   ┌─────────┐     ┌───────────┐     ┌───────────┐     ┌─────────┐           │
+│   │ CLARIFY │ ──► │ BREAKDOWN │ ──► │ IMPLEMENT │ ──► │ DELIVER │           │
+│   │         │     │           │     │           │     │         │           │
+│   │ PRD gen │     │ Task gen  │     │   TDD     │     │ Commit  │           │
+│   └─────────┘     └───────────┘     └─────┬─────┘     │   PR    │           │
+│                                           │           └────┬────┘           │
+│                                     error │                │                │
+│                                           ▼                ▼                │
+│                                     ┌─────────┐     ┌──────────┐           │
+│                                     │  HEAL   │     │ COMPLETE │           │
+│                                     │         │     │          │           │
+│                                     │ Circuit │     │  (end)   │           │
+│                                     │ Breaker │     └──────────┘           │
+│                                     └────┬────┘                            │
+│                                          │                                 │
+│                                    fixed │                                 │
+│                                          │                                 │
+│                                          └──────────► IMPLEMENT            │
+│                                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
 
----
+Valid Transitions:
+  clarify   → breakdown
+  breakdown → implement
+  implement → heal (on test failure)
+  implement → deliver (all tasks done)
+  heal      → implement (on fix)
+  deliver   → complete
+```
 
-## 3. 5-Phase Workflow
+## Directory Structure
 
-### Workflow State Machine
+```
+ralph-dev/
+├── cli/                           # TypeScript CLI tool
+│   ├── src/
+│   │   ├── index.ts              # Entry point, command registration
+│   │   ├── commands/             # CLI command handlers
+│   │   │   ├── service-factory.ts   # Dependency injection
+│   │   │   ├── state.ts             # State management
+│   │   │   ├── tasks.ts             # Task CRUD operations
+│   │   │   ├── status.ts            # Progress overview
+│   │   │   ├── detect.ts            # Language detection
+│   │   │   └── init.ts              # Workspace initialization
+│   │   ├── services/             # Business logic layer
+│   │   │   ├── task-service.ts      # Task operations
+│   │   │   ├── state-service.ts     # Phase transitions
+│   │   │   ├── status-service.ts    # Aggregated status
+│   │   │   ├── context-service.ts   # Rich context for tasks
+│   │   │   └── detection-service.ts # Framework detection
+│   │   ├── repositories/         # Data access layer
+│   │   │   ├── task-repository.service.ts
+│   │   │   ├── state-repository.service.ts
+│   │   │   └── index-repository.service.ts
+│   │   ├── domain/               # Business entities
+│   │   │   ├── task-entity.ts       # Task with state transitions
+│   │   │   ├── state-entity.ts      # Phase state machine
+│   │   │   └── language-config.ts   # Detection results
+│   │   ├── infrastructure/       # External services
+│   │   │   ├── file-system.service.ts  # File I/O with retry
+│   │   │   └── logger.service.ts       # Logging
+│   │   ├── core/                 # Utilities
+│   │   │   ├── circuit-breaker.ts   # Failure protection
+│   │   │   ├── task-parser.ts       # YAML frontmatter parsing
+│   │   │   ├── exit-codes.ts        # Semantic exit codes
+│   │   │   └── retry.ts             # Retry logic
+│   │   ├── language/             # Language detection
+│   │   │   └── detector.ts          # 12+ language support
+│   │   └── test-utils/           # Test mocks
+│   └── package.json
+├── skills/                        # AI agent workflows
+│   ├── detect-language/          # Phase 0: Language detection
+│   ├── phase-1-clarify/          # Phase 1: Requirements → PRD
+│   ├── phase-2-breakdown/        # Phase 2: PRD → Tasks
+│   ├── phase-3-implement/        # Phase 3: TDD implementation
+│   ├── phase-4-heal/             # Phase 4: Error recovery
+│   ├── phase-5-deliver/          # Phase 5: Commit + PR
+│   └── dev-orchestrator/         # Main orchestrator
+├── commands/                      # Plugin command definitions
+│   └── ralph-dev.md              # Main command handler
+├── shared/                        # Shared scripts
+│   ├── bootstrap-cli.sh          # CLI auto-build
+│   └── cli-fallback.sh           # Bash fallback
+├── .claude-plugin/               # Plugin configuration
+│   ├── plugin.json               # Plugin manifest
+│   └── hooks/                    # Lifecycle hooks
+│       ├── session-start.sh
+│       ├── pre-compact.sh
+│       └── stop-hook.sh
+└── .ralph-dev/                   # Runtime workspace (generated)
+    ├── state.json
+    ├── prd.md
+    ├── language.json
+    └── tasks/
+        ├── index.json
+        └── {module}/{id}.md
+```
+
+## Layered Architecture
+
+The CLI follows a strict layered architecture with unidirectional dependencies:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│                         RALPH-DEV WORKFLOW                                  │
+│                               COMMANDS                                      │
+│  Purpose: Parse CLI arguments, format output                               │
+│  Rules: NO business logic, NO direct file access                           │
+│  Example: state.ts, tasks.ts, status.ts                                    │
+└────────────────────────────────────┬───────────────────────────────────────┘
+                                     │ calls
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                               SERVICES                                      │
+│  Purpose: Business logic, validation, orchestration                        │
+│  Rules: NO direct file I/O, uses repositories only                         │
+│  Example: TaskService, StateService, StatusService                         │
+└────────────────────────────────────┬───────────────────────────────────────┘
+                                     │ calls
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                             REPOSITORIES                                    │
+│  Purpose: Data access abstraction, persistence                             │
+│  Rules: Maintain index.json, hide file paths from services                 │
+│  Example: FileSystemTaskRepository, FileSystemStateRepository              │
+└────────────────────────────────────┬───────────────────────────────────────┘
+                                     │ uses
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                DOMAIN                                       │
+│  Purpose: Rich entities with behavior, enforce invariants                  │
+│  Rules: NO external dependencies, self-validating                          │
+│  Example: Task (canStart, complete, fail), State (canTransitionTo)         │
 └────────────────────────────────────────────────────────────────────────────┘
-
-     ┌─────────┐      ┌───────────┐      ┌───────────┐      ┌─────────┐      ┌──────────┐
-     │ CLARIFY │─────►│ BREAKDOWN │─────►│ IMPLEMENT │─────►│ DELIVER │─────►│ COMPLETE │
-     └─────────┘      └───────────┘      └───────────┘      └─────────┘      └──────────┘
-          │                │                   │ ▲               │
-          │                │                   │ │               │
-          ▼                ▼                   ▼ │               ▼
-    ┌──────────┐     ┌──────────┐        ┌──────┴──┐      ┌──────────┐
-    │ Generate │     │  Create  │        │  HEAL   │      │  Create  │
-    │   PRD    │     │  Tasks   │        │ (retry) │      │   PR     │
-    └──────────┘     └──────────┘        └─────────┘      └──────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                            INFRASTRUCTURE                                   │
+│  Purpose: File I/O, logging, retry logic                                   │
+│  Rules: NO business logic, provides primitives only                        │
+│  Example: FileSystemService (with retry), ConsoleLogger                    │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Phase Details
+## Data Flow
 
-| Phase | Skill | Input | Output | Interaction |
-|-------|-------|-------|--------|-------------|
-| **1. CLARIFY** | `phase-1-clarify` | User requirement | `.ralph-dev/prd.md` | Interactive (AskUserQuestion) |
-| **2. BREAKDOWN** | `phase-2-breakdown` | `prd.md` | `.ralph-dev/tasks/*.md` | User approval required |
-| **3. IMPLEMENT** | `phase-3-implement` | Task files | Working code + tests | Autonomous (fresh agents) |
-| **4. HEAL** | `phase-4-heal` | Error context | Fixed code | On-demand (invoked by Phase 3) |
-| **5. DELIVER** | `phase-5-deliver` | Completed code | Git commit + PR | Autonomous |
-
-### State Transitions
+### End-to-End Development Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                     VALID STATE TRANSITIONS                             │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│    clarify ──────────────► breakdown                                    │
-│                                 │                                       │
-│                                 ▼                                       │
-│                            implement ◄───────────┐                      │
-│                             │     │              │                      │
-│                        error│     │all done      │                      │
-│                             ▼     │              │                      │
-│                           heal ───┘ (fixed)      │                      │
-│                             │                    │                      │
-│                             └─── (5 failures) ───┘                      │
-│                                   (skip task)                           │
-│                                                                         │
-│                           implement ──────────► deliver                 │
-│                                                    │                    │
-│                                                    ▼                    │
-│                                                complete                 │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+User Input: /ralph-dev "Build user authentication API"
+│
+▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 1: CLARIFY                                                            │
+│                                                                             │
+│   Skill: phase-1-clarify/SKILL.md                                          │
+│   Input: User requirement string                                            │
+│   Process:                                                                  │
+│     1. Detect project language (ralph-dev detect --save)                   │
+│     2. Ask structured questions (AskUserQuestion tool)                      │
+│     3. Generate PRD from answers                                           │
+│   Output: .ralph-dev/prd.md                                                │
+│   Transition: ralph-dev state set --phase breakdown                        │
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 2: BREAKDOWN                                                          │
+│                                                                             │
+│   Skill: phase-2-breakdown/SKILL.md                                        │
+│   Input: .ralph-dev/prd.md                                                 │
+│   Process:                                                                  │
+│     1. Parse PRD into atomic tasks (<30 min each)                          │
+│     2. Create task files (ralph-dev tasks create)                          │
+│     3. Build dependency graph                                              │
+│     4. Get user approval                                                   │
+│   Output: .ralph-dev/tasks/{module}/{id}.md + index.json                   │
+│   Transition: ralph-dev state set --phase implement                        │
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 3: IMPLEMENT                                                          │
+│                                                                             │
+│   Skill: phase-3-implement/SKILL.md                                        │
+│   Loop:                                                                     │
+│     ┌──────────────────────────────────────────────────────────────────┐   │
+│     │ 1. ralph-dev tasks next --json                                   │   │
+│     │ 2. ralph-dev tasks start <id>                                    │   │
+│     │ 3. Spawn fresh subagent (Task tool)                              │   │
+│     │ 4. Write failing test (TDD)                                      │   │
+│     │ 5. Implement minimal code to pass                                │   │
+│     │ 6. ralph-dev tasks done <id> (success)                           │   │
+│     │    OR invoke Phase 4 (failure)                                   │   │
+│     │ 7. Repeat until no pending tasks                                 │   │
+│     └──────────────────────────────────────────────────────────────────┘   │
+│   Transition: ralph-dev state set --phase deliver                          │
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     │
+              ┌──────────────────────┴──────────────────────┐
+              │ error                                       │ all done
+              ▼                                             ▼
+┌─────────────────────────────────────┐   ┌───────────────────────────────────┐
+│ PHASE 4: HEAL                       │   │ PHASE 5: DELIVER                  │
+│                                     │   │                                   │
+│   Skill: phase-4-heal/SKILL.md     │   │   Skill: phase-5-deliver/SKILL.md │
+│   Process:                          │   │   Process:                        │
+│     1. Analyze test failure         │   │     1. Run quality gates:         │
+│     2. Search for solutions         │   │        - ralph-dev detect --json  │
+│     3. Apply fix                    │   │        - npm test                 │
+│     4. Re-run tests                 │   │        - npm run lint             │
+│     5. Circuit breaker (max 5)      │   │        - npx tsc --noEmit        │
+│   On success: Return to Phase 3    │   │        - npm run build            │
+│   On circuit open: Mark failed,     │   │     2. Create git commit          │
+│                    continue         │   │     3. Create pull request        │
+└─────────────────────────────────────┘   │   Output: PR URL                  │
+                                          │   Transition: phase complete       │
+                                          └───────────────────────────────────┘
 ```
 
----
-
-## 4. CLI Layered Architecture
-
-### Layer Dependency Flow
+### Task Lifecycle
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                     CLI LAYERED ARCHITECTURE                            │
-│                         (cli/src/)                                      │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │                    COMMANDS LAYER                                │   │
-│   │                    (commands/)                                   │   │
-│   │                                                                  │   │
-│   │   ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌──────────┐ │   │
-│   │   │state.ts │ │tasks.ts │ │detect.ts│ │ init.ts │ │ status.ts│ │   │
-│   │   └─────────┘ └─────────┘ └─────────┘ └─────────┘ └──────────┘ │   │
-│   │   ┌────────────────┐ ┌────────────────┐                        │   │
-│   │   │circuit-breaker │ │   detect-ai    │                        │   │
-│   │   └────────────────┘ └────────────────┘                        │   │
-│   │                                                                  │   │
-│   │   Responsibility: Parse args, call services, format output       │   │
-│   └─────────────────────────────────────────────────────────────────┘   │
-│                              │ uses                                     │
-│                              ▼                                          │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │                   SERVICES LAYER                                 │   │
-│   │                   (services/)                                    │   │
-│   │                                                                  │   │
-│   │   ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐   │   │
-│   │   │  TaskService   │  │  StateService  │  │  StatusService  │   │   │
-│   │   └────────────────┘  └────────────────┘  └─────────────────┘   │   │
-│   │   ┌────────────────────┐  ┌────────────────────┐                │   │
-│   │   │  DetectionService  │  │   ContextService   │                │   │
-│   │   └────────────────────┘  └────────────────────┘                │   │
-│   │                                                                  │   │
-│   │   Responsibility: Business logic, validation, orchestration      │   │
-│   └─────────────────────────────────────────────────────────────────┘   │
-│                              │ uses                                     │
-│                              ▼                                          │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │                 REPOSITORIES LAYER                               │   │
-│   │                 (repositories/)                                  │   │
-│   │                                                                  │   │
-│   │   ┌─────────────────────┐  ┌─────────────────────┐              │   │
-│   │   │  ITaskRepository    │  │  IStateRepository   │              │   │
-│   │   │         │           │  │         │           │              │   │
-│   │   │         ▼           │  │         ▼           │              │   │
-│   │   │  FileSystemTask     │  │  FileSystemState    │              │   │
-│   │   │  Repository.service │  │  Repository.service │              │   │
-│   │   └─────────────────────┘  └─────────────────────┘              │   │
-│   │   ┌─────────────────────┐                                       │   │
-│   │   │  IIndexRepository   │                                       │   │
-│   │   │         │           │                                       │   │
-│   │   │         ▼           │                                       │   │
-│   │   │  FileSystemIndex    │                                       │   │
-│   │   │  Repository.service │                                       │   │
-│   │   └─────────────────────┘                                       │   │
-│   │                                                                  │   │
-│   │   Responsibility: Data access abstraction                        │   │
-│   └─────────────────────────────────────────────────────────────────┘   │
-│                              │ uses                                     │
-│                              ▼                                          │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │                    DOMAIN LAYER                                  │   │
-│   │                    (domain/)                                     │   │
-│   │                                                                  │   │
-│   │   ┌──────────────────────┐  ┌──────────────────────┐            │   │
-│   │   │ State (Entity)       │  │ Task (Entity)        │            │   │
-│   │   │ - phase transitions  │  │ - status lifecycle   │            │   │
-│   │   │ - canTransitionTo()  │  │ - isBlocked()        │            │   │
-│   │   │ - getNextAllowed()   │  │ - start()/done()     │            │   │
-│   │   └──────────────────────┘  └──────────────────────┘            │   │
-│   │   ┌──────────────────────┐                                      │   │
-│   │   │ LanguageConfig       │                                      │   │
-│   │   │ - verifyCommands     │                                      │   │
-│   │   └──────────────────────┘                                      │   │
-│   │                                                                  │   │
-│   │   Responsibility: Business rules, invariants, behaviors          │   │
-│   └─────────────────────────────────────────────────────────────────┘   │
-│                              │ uses                                     │
-│                              ▼                                          │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │                 INFRASTRUCTURE LAYER                             │   │
-│   │                 (infrastructure/)                                │   │
-│   │                                                                  │   │
-│   │   ┌──────────────────────────┐  ┌────────────────────────────┐  │   │
-│   │   │ IFileSystem              │  │ ILogger                    │  │   │
-│   │   │        │                 │  │        │                   │  │   │
-│   │   │        ▼                 │  │        ▼                   │  │   │
-│   │   │ FileSystemService        │  │ ConsoleLogger              │  │   │
-│   │   │ - readFile/writeFile     │  │ - debug/info/warn/error    │  │   │
-│   │   │ - ensureDir/remove       │  │                            │  │   │
-│   │   └──────────────────────────┘  └────────────────────────────┘  │   │
-│   │                                                                  │   │
-│   │   Responsibility: File I/O, logging, external systems            │   │
-│   └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │                    CORE UTILITIES                                │   │
-│   │                    (core/)                                       │   │
-│   │                                                                  │   │
-│   │   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐               │   │
-│   │   │ task-parser │ │ task-writer │ │ exit-codes  │               │   │
-│   │   └─────────────┘ └─────────────┘ └─────────────┘               │   │
-│   │   ┌─────────────────┐ ┌─────────────────┐ ┌─────────────┐       │   │
-│   │   │ circuit-breaker │ │ response-wrapper│ │    retry    │       │   │
-│   │   └─────────────────┘ └─────────────────┘ └─────────────┘       │   │
-│   │   ┌───────────────┐ ┌───────────────────┐ ┌─────────────┐       │   │
-│   │   │ error-handler │ │ structured-output │ │   ci-mode   │       │   │
-│   │   └───────────────┘ └───────────────────┘ └─────────────┘       │   │
-│   │                                                                  │   │
-│   │   Responsibility: Parsing, error handling, cross-cutting utils   │   │
-│   └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────┐
+│                            Task State Machine                               │
+│                                                                            │
+│                        ┌──────────────────────────────────────┐            │
+│                        │                                      │            │
+│                        ▼                                      │            │
+│   ┌─────────────┐   start   ┌───────────────┐   done   ┌───────────┐      │
+│   │   PENDING   │ ────────► │  IN_PROGRESS  │ ───────► │ COMPLETED │      │
+│   │             │           │               │          │           │      │
+│   │ canStart()  │           │               │          │ terminal  │      │
+│   └─────────────┘           └───────┬───────┘          └───────────┘      │
+│                                     │                                      │
+│                               fail  │                                      │
+│                                     ▼                                      │
+│                             ┌─────────────┐                                │
+│                             │   FAILED    │                                │
+│                             │             │                                │
+│                             │  terminal   │                                │
+│                             └─────────────┘                                │
+│                                                                            │
+│   Domain Entity Methods:                                                   │
+│   - task.canStart(): boolean (checks dependencies)                         │
+│   - task.start(): void (pending → in_progress)                            │
+│   - task.complete(): void (in_progress → completed)                        │
+│   - task.fail(reason): void (in_progress → failed)                        │
+│   - task.isBlocked(completedIds): boolean                                  │
+│   - task.isTerminal(): boolean                                             │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Dependency Injection (service-factory.ts)
+## Key Design Patterns
+
+### 1. Circuit Breaker (Healing)
+
+Prevents infinite retry loops during error recovery:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    DEPENDENCY INJECTION                                 │
-│                    (service-factory.ts)                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   createServices(workspaceDir)                                          │
-│       │                                                                 │
-│       ▼                                                                 │
-│   ┌────────────────────────────────────────────────────────────────┐    │
-│   │                                                                │    │
-│   │   ConsoleLogger ────────────────────────────────────┐          │    │
-│   │   FileSystemService ───────────────────────────┐    │          │    │
-│   │         │                                      │    │          │    │
-│   │         ▼                                      │    │          │    │
-│   │   FileSystemTaskRepository ─────────────┐      │    │          │    │
-│   │   FileSystemStateRepository ────────┐   │      │    │          │    │
-│   │   FileSystemIndexRepository ────┐   │   │      │    │          │    │
-│   │                                 │   │   │      │    │          │    │
-│   │                                 ▼   ▼   ▼      ▼    ▼          │    │
-│   │                             ┌─────────────────────────┐        │    │
-│   │                             │    ServiceContainer     │        │    │
-│   │                             │  - taskService          │        │    │
-│   │                             │  - stateService         │        │    │
-│   │                             │  - statusService        │        │    │
-│   │                             │  - detectionService     │        │    │
-│   │                             │  - logger               │        │    │
-│   │                             └─────────────────────────┘        │    │
-│   │                                                                │    │
-│   └────────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-│   Also provides convenience functions:                                  │
-│   - createTaskService(workspaceDir)                                     │
-│   - createStateService(workspaceDir)                                    │
-│   - createStatusService(workspaceDir)                                   │
-│   - createDetectionService(workspaceDir)                                │
-│   - createContextService(workspaceDir)                                  │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────┐
+│                          Circuit Breaker States                             │
+│                                                                            │
+│   ┌──────────┐      failure      ┌──────────┐      timeout     ┌─────────┐│
+│   │  CLOSED  │ ───────────────►  │   OPEN   │ ───────────────► │HALF_OPEN││
+│   │ (normal) │  (5 consecutive)  │(fail-fast)│    (60 sec)     │ (test)  ││
+│   └────┬─────┘                   └──────────┘                  └────┬────┘│
+│        │                                                            │      │
+│        │ success                                            success │      │
+│        │◄───────────────────────────────────────────────────────────┘      │
+│                                                                            │
+│   Config: failureThreshold=5, timeout=60s, successThreshold=2              │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Architecture Rules
+### 2. Dependency Injection (Service Factory)
 
-| Layer | DO | DON'T |
-|-------|-----|-------|
-| **Commands** | Parse args, call services, format output | Put business logic, access file system |
-| **Services** | Business logic, coordinate repos | Create own dependencies |
-| **Repositories** | Data persistence, maintain index.json | Expose file paths to services |
-| **Domain** | Behavior methods, enforce invariants | Just be data bags |
-| **Infrastructure** | File I/O, logging, retry logic | Contain business rules |
+All services created via `cli/src/commands/service-factory.ts`:
 
----
-
-## 5. Skills System
-
-### Skill Structure
-
-Each skill is defined in a `SKILL.md` file with YAML frontmatter:
-
-```yaml
----
-name: phase-1-clarify
-description: Interactive requirement clarification
-allowed-tools: [Task, Read, Write, Bash]
-user-invocable: true
----
-
-# Skill Content (Markdown)
-Execution instructions...
+```typescript
+// Factory creates all dependencies
+export function createTaskService(workspaceDir: string): TaskService {
+  const fileSystem = new FileSystemService();
+  const taskRepo = new FileSystemTaskRepository(fileSystem, workspaceDir);
+  const indexRepo = new FileSystemIndexRepository(fileSystem, workspaceDir);
+  const logger = new ConsoleLogger();
+  return new TaskService(taskRepo, indexRepo, logger);
+}
 ```
 
-### Available Skills
+### 3. Rich Domain Entities
 
-| Skill | Directory | Purpose |
-|-------|-----------|---------|
-| `dev-orchestrator` | `skills/dev-orchestrator/` | Main orchestrator, manages entire workflow |
-| `phase-1-clarify` | `skills/phase-1-clarify/` | Interactive requirement gathering |
-| `phase-2-breakdown` | `skills/phase-2-breakdown/` | Task decomposition from PRD |
-| `phase-3-implement` | `skills/phase-3-implement/` | TDD implementation loop |
-| `phase-4-heal` | `skills/phase-4-heal/` | Error recovery and auto-fix |
-| `phase-5-deliver` | `skills/phase-5-deliver/` | Quality gates, commit, PR |
-| `detect-language` | `skills/detect-language/` | Project language detection |
+Entities contain behavior, not just data:
 
-### Skill Invocation Chain
+```typescript
+// Task entity with state transitions
+class Task {
+  canStart(): boolean {
+    return this.status === 'pending';
+  }
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    SKILL INVOCATION CHAIN                               │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   User: /ralph-dev                                                      │
-│         │                                                               │
-│         ▼                                                               │
-│   ┌─────────────────────────────────────┐                               │
-│   │ dev-orchestrator/SKILL.md           │                               │
-│   │                                     │                               │
-│   │   Check phase: ralph-dev state get  │                               │
-│   └─────────────────────────────────────┘                               │
-│         │                                                               │
-│         │ Dispatches based on current phase                             │
-│         ▼                                                               │
-│   ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐       │
-│   │ phase-1-clarify │──►│ phase-2-breakdown│──►│ phase-3-implement│      │
-│   └─────────────────┘   └─────────────────┘   └─────────────────┘       │
-│                                                      │                   │
-│                                                      │ on error          │
-│                                                      ▼                   │
-│                                               ┌─────────────────┐        │
-│                                               │  phase-4-heal   │        │
-│                                               └─────────────────┘        │
-│                                                      │                   │
-│                                                      │ all done          │
-│                                                      ▼                   │
-│                                               ┌─────────────────┐        │
-│                                               │ phase-5-deliver │        │
-│                                               └─────────────────┘        │
-│                                                      │                   │
-│                                                      ▼                   │
-│                                               ┌─────────────────┐        │
-│                                               │    COMPLETE     │        │
-│                                               └─────────────────┘        │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+  start(): void {
+    if (!this.canStart()) throw new Error('Cannot start');
+    this._status = 'in_progress';
+    this._startedAt = new Date();
+  }
 
----
-
-## 6. Plugin Infrastructure
-
-### Plugin Configuration
-
-**`.claude-plugin/plugin.json`:**
-
-```json
-{
-  "name": "ralph-dev",
-  "version": "0.1.0",
-  "description": "Autonomous end-to-end development system",
-  "hooks": {
-    "SessionStart": [...],
-    "PreCompact": [...]
+  complete(): void {
+    if (this.status !== 'in_progress') throw new Error('Cannot complete');
+    this._status = 'completed';
+    this._completedAt = new Date();
   }
 }
 ```
 
-### Session Hooks
+### 4. Fresh Agent Context
 
-| Hook | Script | Purpose |
-|------|--------|---------|
-| `SessionStart` | `hooks/session-start.sh` | Build CLI, validate environment |
-| `PreCompact` | `hooks/pre-compact.sh` | Save state before context compression |
-
-### Bootstrap System (`shared/`)
+Each task implementation spawns a fresh subagent to prevent context pollution:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    CLI BOOTSTRAP SEQUENCE                               │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   SessionStart Hook                                                     │
-│         │                                                               │
-│         ▼                                                               │
-│   ┌─────────────────────────────────────┐                               │
-│   │ shared/bootstrap-cli.sh             │                               │
-│   │                                     │                               │
-│   │   1. Check if cli/dist exists       │                               │
-│   │   2. If not: npm install && build   │                               │
-│   │   3. Verify ralph-dev command works │                               │
-│   └─────────────────────────────────────┘                               │
-│         │                                                               │
-│         │ CLI ready (or fallback to cli-fallback.sh)                    │
-│         ▼                                                               │
-│   ┌─────────────────────────────────────┐                               │
-│   │ ralph-dev available in PATH         │                               │
-│   └─────────────────────────────────────┘                               │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Fresh Context Pattern                                │
+│                                                                             │
+│   Main Agent (dev-orchestrator)                                             │
+│        │                                                                    │
+│        ├──► Task Tool ──► Subagent (Task 1) ──► Complete ──► Return        │
+│        │                                                                    │
+│        ├──► Task Tool ──► Subagent (Task 2) ──► Complete ──► Return        │
+│        │                                                                    │
+│        └──► Task Tool ──► Subagent (Task 3) ──► Complete ──► Return        │
+│                                                                             │
+│   Benefits:                                                                 │
+│   - Clean context per task (no pollution)                                   │
+│   - Consistent starting point                                               │
+│   - Better error isolation                                                  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### 5. State Persistence for Recovery
+
+State persisted to JSON enables recovery after context compression:
+
+```json
+// .ralph-dev/state.json
+{
+  "phase": "implement",
+  "currentTask": "auth.login",
+  "startedAt": "2026-01-20T10:00:00Z",
+  "updatedAt": "2026-01-20T10:30:00Z"
+}
+```
+
+Recovery process:
+1. `ralph-dev state get --json` → Get current phase
+2. `ralph-dev tasks list --json` → Get all task status
+3. `ralph-dev tasks next --json` → Resume with next task
+
+## Plugin Hooks
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            Plugin Lifecycle                                  │
+│                                                                             │
+│   SessionStart                                                              │
+│   └─► hooks/session-start.sh                                               │
+│       └─► Initialize .ralph-dev/ if needed                                 │
+│                                                                             │
+│   PreCompact (before context compression)                                   │
+│   └─► hooks/pre-compact.sh                                                 │
+│       └─► Save current state to disk                                       │
+│                                                                             │
+│   Stop (session end)                                                        │
+│   └─► hooks/stop-hook.sh                                                   │
+│       └─► Save final state, cleanup                                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Task File Format
+
+Tasks are stored as markdown files with YAML frontmatter:
+
+```markdown
+---
+id: auth.login
+module: auth
+priority: 2
+status: pending
+estimatedMinutes: 25
+dependencies:
+  - setup.scaffold
 ---
 
-## 7. Data Flow
+# Login Implementation
 
-### Phase 1-2: Clarify to Breakdown
+## Acceptance Criteria
+1. User can login with email/password
+2. Returns JWT token on success
+3. Returns error on invalid credentials
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    CLARIFY → BREAKDOWN DATA FLOW                        │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   USER                                                                  │
-│     │                                                                   │
-│     │ "Build a user auth system"                                        │
-│     ▼                                                                   │
-│   ┌─────────────────┐                                                   │
-│   │ Phase 1 Skill   │                                                   │
-│   │ (clarify)       │                                                   │
-│   └─────────────────┘                                                   │
-│     │                                                                   │
-│     │ AskUserQuestion (3-5 questions)                                   │
-│     ▼                                                                   │
-│   ┌─────────────────┐                                                   │
-│   │ Generate PRD    │──────► .ralph-dev/prd.md                          │
-│   └─────────────────┘                                                   │
-│     │                                                                   │
-│     │ ralph-dev state set --phase breakdown                             │
-│     ▼                                                                   │
-│   ┌─────────────────┐                                                   │
-│   │ Phase 2 Skill   │                                                   │
-│   │ (breakdown)     │                                                   │
-│   └─────────────────┘                                                   │
-│     │                                                                   │
-│     │ ralph-dev tasks create <id> ...                                   │
-│     ▼                                                                   │
-│   ┌───────────────────────────────────────────┐                         │
-│   │ .ralph-dev/tasks/                         │                         │
-│   │ ├── auth/                                 │                         │
-│   │ │   ├── auth.login.md                     │                         │
-│   │ │   └── auth.signup.md                    │                         │
-│   │ └── index.json                            │                         │
-│   └───────────────────────────────────────────┘                         │
-│     │                                                                   │
-│     │ AskUserQuestion (approval)                                        │
-│     │ ralph-dev state set --phase implement                             │
-│     ▼                                                                   │
-│   ┌─────────────────┐                                                   │
-│   │ state.json      │                                                   │
-│   │ {phase:         │                                                   │
-│   │  "implement"}   │                                                   │
-│   └─────────────────┘                                                   │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+## Notes
+- Use bcrypt for password hashing
 ```
 
-### Phase 3-4: Implement with Healing
+## CLI Commands Reference
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    IMPLEMENT ⇄ HEAL DATA FLOW                           │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │ IMPLEMENTATION LOOP (Phase 3)                                    │   │
-│   │                                                                  │   │
-│   │   ralph-dev tasks next --json                                    │   │
-│   │          │                                                       │   │
-│   │          │ {task: {id: "auth.login", ...}}                       │   │
-│   │          ▼                                                       │   │
-│   │   ralph-dev tasks start <id>                                     │   │
-│   │          │                                                       │   │
-│   │          ▼                                                       │   │
-│   │   ┌───────────────────────────────────────────────────────┐      │   │
-│   │   │ FRESH SUBAGENT (Task tool)                            │      │   │
-│   │   │                                                       │      │   │
-│   │   │   1. Read task file                                   │      │   │
-│   │   │   2. Write failing tests (TDD)                        │      │   │
-│   │   │   3. Implement minimal code                           │      │   │
-│   │   │   4. Run tests: CI=true npm test                      │      │   │
-│   │   └───────────────────────────────────────────────────────┘      │   │
-│   │          │                                                       │   │
-│   │          ▼                                                       │   │
-│   │   ┌──────┴──────┐                                                │   │
-│   │   │  Success?   │                                                │   │
-│   │   └──────┬──────┘                                                │   │
-│   │      yes │ no                                                    │   │
-│   │          │  │                                                    │   │
-│   │          ▼  ▼                                                    │   │
-│   │   ┌─────────┐ ┌─────────────────────────────────────────┐        │   │
-│   │   │ tasks   │ │ HEALING FLOW (Phase 4)                  │        │   │
-│   │   │ done    │ │                                         │        │   │
-│   │   │ <id>    │ │   1. INVESTIGATE - Read error output    │        │   │
-│   │   └─────────┘ │   2. ANALYZE - Find working examples    │        │   │
-│   │       │       │   3. HYPOTHESIS - Classify error type   │        │   │
-│   │       │       │   4. FIX - Apply fix, verify (max 3x)   │        │   │
-│   │       │       │                                         │        │   │
-│   │       │       │   Circuit Breaker: 5 failures → skip    │        │   │
-│   │       │       └─────────────────────────────────────────┘        │   │
-│   │       │                     │                                    │   │
-│   │       │                     │ fixed / skip                       │   │
-│   │       └─────────────────────┴────────────────────────────────┐   │   │
-│   │                                                              │   │   │
-│   │                              ◄────────────────────────────────┘   │   │
-│   │                                                                  │   │
-│   │   Exit: ralph-dev tasks next → null (no more tasks)              │   │
-│   └──────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+| Command | Description |
+|---------|-------------|
+| `ralph-dev state get --json` | Get current phase and task |
+| `ralph-dev state set --phase <phase>` | Set workflow phase |
+| `ralph-dev tasks create <id>` | Create new task |
+| `ralph-dev tasks list --json` | List all tasks |
+| `ralph-dev tasks next --json` | Get next pending task |
+| `ralph-dev tasks start <id>` | Mark task as in_progress |
+| `ralph-dev tasks done <id>` | Mark task as completed |
+| `ralph-dev tasks fail <id>` | Mark task as failed |
+| `ralph-dev detect --json` | Detect language/framework |
+| `ralph-dev status --json` | Get overall progress |
 
-### Task Lifecycle State Machine
+## Exit Codes
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      TASK LIFECYCLE                                     │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│                     ┌─────────────┐                                     │
-│                     │   PENDING   │◄──────────── [created]              │
-│                     └─────────────┘                                     │
-│                            │                                            │
-│                            │ ralph-dev tasks start <id>                 │
-│                            ▼                                            │
-│                     ┌─────────────┐                                     │
-│                     │ IN_PROGRESS │                                     │
-│                     └─────────────┘                                     │
-│                       │         │                                       │
-│           tasks done  │         │  tasks fail --reason                  │
-│                       ▼         ▼                                       │
-│               ┌───────────┐  ┌──────────┐                               │
-│               │ COMPLETED │  │  FAILED  │                               │
-│               └───────────┘  └──────────┘                               │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+| Code | Meaning |
+|------|---------|
+| 0 | SUCCESS |
+| 1 | GENERAL_ERROR |
+| 2 | NOT_FOUND |
+| 3 | INVALID_INPUT |
+| 4 | CONFLICT |
+| 5 | SYSTEM_ERROR |
 
----
+## Dependencies
 
-## 8. Directory Structure
+**Production:**
+- commander (11.1.0) - CLI framework
+- chalk (5.3.0) - Terminal colors
+- fs-extra (11.2.0) - Enhanced file system
+- yaml (2.3.4) - YAML parsing
+- zod (3.22.4) - Schema validation
 
-```
-ralph-dev/
-│
-├── .claude-plugin/                    # PLUGIN LAYER
-│   ├── plugin.json                    # Plugin metadata & hooks config
-│   ├── marketplace.json               # Marketplace listing
-│   └── hooks/
-│       ├── session-start.sh           # Build CLI on session start
-│       └── pre-compact.sh             # Save state before compression
-│
-├── cli/                               # CLI TOOL (TypeScript)
-│   ├── src/
-│   │   ├── commands/                  # [Layer 1: Commands]
-│   │   │   ├── state.ts               # State management commands
-│   │   │   ├── tasks.ts               # Task management commands
-│   │   │   ├── detect.ts              # Language detection
-│   │   │   ├── detect-ai.ts           # AI-specific detection
-│   │   │   ├── init.ts                # Initialize workspace
-│   │   │   ├── status.ts              # Status summary
-│   │   │   ├── circuit-breaker.ts     # Circuit breaker commands
-│   │   │   └── service-factory.ts     # Dependency injection
-│   │   │
-│   │   ├── services/                  # [Layer 2: Services]
-│   │   │   ├── task-service.ts        # Task lifecycle management
-│   │   │   ├── state-service.ts       # State transitions
-│   │   │   ├── status-service.ts      # Progress aggregation
-│   │   │   ├── detection-service.ts   # Language detection logic
-│   │   │   └── context-service.ts     # Context gathering
-│   │   │
-│   │   ├── repositories/              # [Layer 3: Repositories]
-│   │   │   ├── task-repository.ts     # Interface
-│   │   │   ├── task-repository.service.ts
-│   │   │   ├── state-repository.ts    # Interface
-│   │   │   ├── state-repository.service.ts
-│   │   │   ├── index-repository.ts    # Interface
-│   │   │   └── index-repository.service.ts
-│   │   │
-│   │   ├── domain/                    # [Layer 4: Domain]
-│   │   │   ├── state-entity.ts        # State with transitions
-│   │   │   ├── task-entity.ts         # Task with lifecycle
-│   │   │   └── language-config.ts     # Language configuration
-│   │   │
-│   │   ├── infrastructure/            # [Layer 5: Infrastructure]
-│   │   │   ├── file-system.ts         # Interface
-│   │   │   ├── file-system.service.ts # Implementation
-│   │   │   ├── logger.ts              # Interface
-│   │   │   └── logger.service.ts      # ConsoleLogger
-│   │   │
-│   │   ├── core/                      # Utilities
-│   │   │   ├── task-parser.ts         # YAML frontmatter parser
-│   │   │   ├── task-writer.ts         # Task file writer
-│   │   │   ├── exit-codes.ts          # Standard exit codes
-│   │   │   ├── response-wrapper.ts    # JSON/human output
-│   │   │   ├── error-handler.ts       # Structured errors
-│   │   │   ├── structured-output.ts   # Output formatting
-│   │   │   ├── circuit-breaker.ts     # Circuit breaker pattern
-│   │   │   ├── retry.ts               # Retry with backoff
-│   │   │   └── ci-mode.ts             # CI environment detection
-│   │   │
-│   │   ├── language/                  # Language Detection
-│   │   │   └── detector.ts            # Multi-language detector
-│   │   │
-│   │   ├── test-utils/                # Test Mocks
-│   │   │   ├── mock-logger.ts
-│   │   │   ├── mock-file-system.ts
-│   │   │   ├── mock-task-repository.ts
-│   │   │   ├── mock-state-repository.ts
-│   │   │   └── test-data.ts
-│   │   │
-│   │   └── index.ts                   # CLI entry point
-│   │
-│   ├── package.json
-│   └── dist/                          # Compiled output
-│
-├── skills/                            # AI AGENT WORKFLOWS
-│   ├── dev-orchestrator/
-│   │   └── SKILL.md                   # Main orchestrator
-│   ├── phase-1-clarify/
-│   │   └── SKILL.md                   # Requirement clarification
-│   ├── phase-2-breakdown/
-│   │   └── SKILL.md                   # Task decomposition
-│   ├── phase-3-implement/
-│   │   ├── SKILL.md                   # Implementation loop
-│   │   └── implementer-prompt-v2.md   # Subagent template
-│   ├── phase-4-heal/
-│   │   └── SKILL.md                   # Error recovery
-│   ├── phase-5-deliver/
-│   │   └── SKILL.md                   # Quality gates & PR
-│   └── detect-language/
-│       └── SKILL.md                   # Language detection
-│
-├── shared/                            # SHARED UTILITIES
-│   ├── bootstrap-cli.sh               # CLI bootstrap script
-│   ├── cli-fallback.sh                # Bash fallback
-│   ├── test-bootstrap.sh              # Bootstrap tests
-│   └── README.md
-│
-├── commands/                          # USER COMMANDS
-│   └── ralph-dev.md                   # /ralph-dev command
-│
-├── .ralph-dev/                        # WORKSPACE (runtime, gitignored)
-│   ├── state.json                     # Current phase & progress
-│   ├── prd.md                         # Product requirements
-│   ├── language.json                  # Detected language config
-│   └── tasks/
-│       ├── index.json                 # Task metadata index
-│       └── {module}/{id}.md           # Individual task files
-│
-├── .claude/
-│   └── rules/                         # Workflow documentation
-│       ├── ralph-dev-workflow.md
-│       ├── ralph-dev-principles.md
-│       └── ralph-dev-commands.md
-│
-├── docs/                              # Documentation
-│   ├── ARCHITECTURE.md                # This file
-│   ├── CONFIGURATION.md
-│   ├── QUICK_START_V0.3.md
-│   ├── CRITICAL_FEATURES.md
-│   └── ralph-dev-guide.md
-│
-├── CLAUDE.md                          # Project instructions
-└── package.json                       # Root package
-```
+**Development:**
+- TypeScript 5.3.3
+- Vitest 1.1.0
+- ESLint 8.56.0
+- Prettier 3.1.1
 
----
+## Environment Variables
 
-## 9. Error Handling & Recovery
-
-### Circuit Breaker Pattern
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    CIRCUIT BREAKER STATE MACHINE                        │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│                         ┌──────────┐                                    │
-│                         │  CLOSED  │◄─────────────────┐                 │
-│                         │ (normal) │                  │                 │
-│                         └──────────┘                  │                 │
-│                              │                        │                 │
-│                              │ 5 consecutive          │ success         │
-│                              │ failures               │                 │
-│                              ▼                        │                 │
-│                         ┌──────────┐                  │                 │
-│                         │   OPEN   │                  │                 │
-│                         │(fail-fast)│                 │                 │
-│                         └──────────┘                  │                 │
-│                              │                        │                 │
-│                              │ after 60s              │                 │
-│                              ▼                        │                 │
-│                         ┌──────────┐                  │                 │
-│                         │HALF-OPEN │──────────────────┘                 │
-│                         │ (probe)  │                                    │
-│                         └──────────┘                                    │
-│                              │                                          │
-│                              │ failure → back to OPEN                   │
-│                              ▼                                          │
-│                                                                         │
-│   Configuration: maxFailures=5, timeout=60s                             │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Retry with Exponential Backoff
-
-```
-Attempt 1 → fail → wait 100ms
-Attempt 2 → fail → wait 200ms
-Attempt 3 → fail → throw Error
-
-Configuration:
-- maxAttempts: 3
-- initialDelay: 100ms
-- maxDelay: 1000ms
-- backoffMultiplier: 2
-```
-
-### Exit Codes
-
-| Code | Name | Description |
-|------|------|-------------|
-| 0 | `SUCCESS` | Operation completed successfully |
-| 1 | `GENERAL_ERROR` | Unexpected error |
-| 2 | `NOT_FOUND` | Resource not found (task, state) |
-| 3 | `INVALID_INPUT` | Bad arguments, validation failed |
-| 4 | `CONFLICT` | Duplicate ID, invalid transition |
-| 5 | `SYSTEM_ERROR` | File system error |
-
-### Context Compression Recovery
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    CONTEXT COMPRESSION RECOVERY                         │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   1. PreCompact hook saves state                                        │
-│   2. Context compressed                                                 │
-│   3. Session resumes with fresh context                                 │
-│   4. Recovery sequence:                                                 │
-│                                                                         │
-│      ralph-dev state get --json                                         │
-│      → {phase: "implement", currentTask: "auth.2fa"}                    │
-│                                                                         │
-│      ralph-dev tasks list --json                                        │
-│      → {completed: 5, pending: 3, failed: 1}                            │
-│                                                                         │
-│      ralph-dev tasks next --json                                        │
-│      → {task: {id: "auth.2fa"}}                                         │
-│                                                                         │
-│   5. Resume appropriate phase skill                                     │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 10. Technology Stack
-
-| Layer | Technology |
-|-------|------------|
-| **CLI** | TypeScript 5.3+, Commander.js |
-| **Validation** | Zod schemas |
-| **Serialization** | YAML (tasks), JSON (state, index) |
-| **Testing** | Vitest |
-| **File I/O** | fs-extra |
-| **Terminal** | Chalk (colors) |
-| **Runtime** | Node.js 18+ |
-| **Skills** | Markdown with YAML frontmatter |
-| **Plugin** | Claude Code Plugin API |
-
----
-
-## Summary
-
-Ralph-dev is a **state-driven, context-compression resilient** autonomous development system that:
-
-1. **Transforms requirements** through 5 phases: Clarify → Breakdown → Implement ⇄ Heal → Deliver
-2. **Persists all state** via CLI to survive context compression
-3. **Implements with TDD** using fresh subagents per task
-4. **Recovers from errors** with healing skill and circuit breakers
-5. **Delivers quality code** through automated gates and PR creation
-
-The architecture enforces strict separation of concerns through layered CLI design and skill-based AI workflows, enabling reliable autonomous development from natural language to production-ready code.
-> Ralph-dev 是一个**状态驱动、上下文压缩弹性**的自主开发系统。
+| Variable | Purpose |
+|----------|---------|
+| `RALPH_DEV_WORKSPACE` | Override workspace directory |
+| `CI` | Set to `true` for CI/test mode |
 
 ---
 

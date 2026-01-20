@@ -300,7 +300,7 @@ Ralph-dev CLI uses a **layered architecture** with clear separation of concerns:
 - **Circuit Breaker**: Prevents cascade failures in healing phase (auto-stops after 5 failures)
 - **Saga Pattern**: Ensures atomic multi-step operations with automatic rollback
 
-**See [cli/CLAUDE.md](cli/CLAUDE.md) for detailed architecture documentation, design patterns, and development guidelines.**
+**See [CLAUDE.md](CLAUDE.md) for detailed architecture documentation, design patterns, and development guidelines.**
 
 ## Development
 
@@ -363,6 +363,6 @@ MIT - Part of the Ralph-dev project
 
 ---
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** Early development
 **Repository:** https://github.com/mylukin/ralph-dev

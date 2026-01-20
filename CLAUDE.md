@@ -59,6 +59,49 @@ CI=true npx vitest run <file> # Run single test
 For CLI-specific implementation details, see:
 - **@cli/CLAUDE.md** - TypeScript CLI development guide
 
+## CLI Release Process
+
+When user says "发布 cli release" or "publish cli release", execute the following steps automatically:
+> 当用户说"发布 cli release"时，自动执行以下步骤：
+
+### Release Steps
+
+```bash
+# Step 1: Run quality checks
+cd cli && CI=true npm test && npm run lint && npm run build
+
+# Step 2: Determine version bump (ask user if not specified)
+# Options: patch (0.0.x), minor (0.x.0), major (x.0.0)
+
+# Step 3: Bump version
+npm version <patch|minor|major>
+
+# Step 4: Commit and tag
+cd .. && git add cli/package.json
+git commit -m "chore(cli): release v$(node -p \"require('./cli/package.json').version\")"
+git tag cli-v$(node -p "require('./cli/package.json').version")
+
+# Step 5: Push to trigger GitHub Actions
+git push origin main --tags
+```
+
+### Automated Workflow
+
+GitHub Actions (`.github/workflows/publish-cli.yml`) will automatically:
+1. Verify tag version matches `package.json`
+2. Run tests and lint
+3. Build the CLI
+4. Publish to npm
+5. Create GitHub Release
+
+### Version Guidelines
+
+| Type | When to Use | Example |
+|------|-------------|---------|
+| `patch` | Bug fixes, minor updates | 0.2.0 → 0.2.1 |
+| `minor` | New features, backwards compatible | 0.2.0 → 0.3.0 |
+| `major` | Breaking changes | 0.2.0 → 1.0.0 |
+
 ---
 
 **Last Updated:** 2026-01-20

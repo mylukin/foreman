@@ -62,7 +62,7 @@ When tasks fail, automatically:
 - Investigates errors using WebSearch
 - Applies fixes based on research
 - Re-runs verification commands
-- Retries up to 3 times before escalating
+- Retries up to 5 times before escalating (circuit breaker pattern)
 
 ### Safety Features
 Inspired by [Superpowers](https://github.com/coleam00/superpowers):
@@ -106,7 +106,7 @@ CLARIFY → BREAKDOWN → IMPLEMENT ⇄ HEAL → DELIVER
 - Triggered when Phase 3 tasks fail
 - Uses WebSearch to research error solutions
 - Applies fixes and re-runs verification
-- Max 3 retry attempts per error
+- Max 5 retry attempts per error (circuit breaker)
 
 **Phase 5: DELIVER**
 - Skill: `skills/phase-5-deliver/`
@@ -130,7 +130,11 @@ ralph-dev/
 │   │   ├── core/
 │   │   │   ├── task-parser.ts      # Parse YAML frontmatter
 │   │   │   ├── task-writer.ts      # Write task files
-│   │   │   └── index-manager.ts    # Manage task index
+│   │   │   └── circuit-breaker.ts  # Failure protection pattern
+│   │   ├── repositories/
+│   │   │   ├── task-repository.service.ts    # Task persistence
+│   │   │   ├── state-repository.service.ts   # State persistence
+│   │   │   └── index-repository.service.ts   # Task index management
 │   │   └── language/
 │   │       └── detector.ts   # Multi-language detection
 │   └── bin/
