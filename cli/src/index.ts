@@ -6,6 +6,7 @@ import { registerTaskCommands } from './commands/tasks';
 import { registerStatusCommand } from './commands/status';
 import { registerDetectCommand } from './commands/detect';
 import { registerDetectAICommand } from './commands/detect-ai';
+import { registerInitCommand } from './commands/init';
 import { version } from '../package.json';
 
 const program = new Command();
@@ -24,6 +25,7 @@ registerTaskCommands(program, workspaceDir);
 registerStatusCommand(program, workspaceDir);
 registerDetectCommand(program, workspaceDir);
 registerDetectAICommand(program, workspaceDir);
+registerInitCommand(program, workspaceDir);
 
 // Parse command line arguments
 program.parse(process.argv);
