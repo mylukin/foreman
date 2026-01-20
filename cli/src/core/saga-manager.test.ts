@@ -201,6 +201,71 @@ describe('SagaExecutor', () => {
       // Should compensate in reverse order: step2, step1
       expect(rollbackOrder).toEqual(['step2', 'step1']);
     });
+
+    it('should return true when no steps to rollback', async () => {
+      const executor = new SagaExecutor(testDir);
+      const success = await executor.rollback();
+      expect(success).toBe(true);
+    });
+  });
+
+  describe('recover', () => {
+    it('should detect no incomplete sagas when log does not exist', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      await SagaExecutor.recover(testDir);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No saga recovery needed'));
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should detect incomplete saga from previous session', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      // Create incomplete saga log
+      const logPath = path.join(testDir, '.ralph-dev', 'saga.log');
+      fs.ensureDirSync(path.dirname(logPath));
+
+      const sagaStartEvent = {
+        timestamp: new Date().toISOString(),
+        event: 'saga_started',
+        data: { stepCount: 3 },
+      };
+      fs.writeFileSync(logPath, JSON.stringify(sagaStartEvent) + '\n', 'utf-8');
+
+      await SagaExecutor.recover(testDir);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Found incomplete saga'));
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should detect no incomplete sagas when saga completed', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      // Create complete saga log
+      const logPath = path.join(testDir, '.ralph-dev', 'saga.log');
+      fs.ensureDirSync(path.dirname(logPath));
+
+      const events = [
+        {
+          timestamp: new Date().toISOString(),
+          event: 'saga_started',
+          data: { stepCount: 2 },
+        },
+        {
+          timestamp: new Date().toISOString(),
+          event: 'saga_completed',
+          data: { completedSteps: ['step1', 'step2'] },
+        },
+      ];
+
+      fs.writeFileSync(logPath, events.map(e => JSON.stringify(e)).join('\n') + '\n', 'utf-8');
+
+      await SagaExecutor.recover(testDir);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No incomplete sagas found'));
+      consoleLogSpy.mockRestore();
+    });
   });
 });
 
@@ -242,6 +307,101 @@ describe('Phase2Saga', () => {
     // Compensate - should remove directory
     await initStep!.compensate();
     expect(fs.existsSync(tasksDir)).toBe(false);
+  });
+
+  it('should create task index with proper structure', async () => {
+    const saga = new Phase2Saga(testDir);
+    const steps = saga.createSagaSteps();
+    const indexStep = steps.find(s => s.name === 'create_task_index');
+
+    expect(indexStep).toBeDefined();
+
+    const tasksDir = path.join(testDir, '.ralph-dev', 'tasks');
+    const indexPath = path.join(tasksDir, 'index.json');
+
+    fs.ensureDirSync(tasksDir);
+
+    // Execute - should create index.json
+    await indexStep!.execute();
+    expect(fs.existsSync(indexPath)).toBe(true);
+
+    const index = fs.readJSONSync(indexPath);
+    expect(index).toHaveProperty('version', '1.0.0');
+    expect(index).toHaveProperty('tasks');
+    expect(index.tasks).toEqual({});
+    expect(index).toHaveProperty('createdAt');
+    expect(index.createdAt).toBeTruthy();
+
+    // Compensate - should remove index
+    await indexStep!.compensate();
+    expect(fs.existsSync(indexPath)).toBe(false);
+  });
+
+  it('should add ralph-dev entries to gitignore', async () => {
+    const saga = new Phase2Saga(testDir);
+    const steps = saga.createSagaSteps();
+    const gitignoreStep = steps.find(s => s.name === 'verify_gitignore');
+
+    expect(gitignoreStep).toBeDefined();
+
+    const gitignorePath = path.join(testDir, '.gitignore');
+
+    // Execute - should add entries to .gitignore
+    await gitignoreStep!.execute();
+
+    expect(fs.existsSync(gitignorePath)).toBe(true);
+    const content = fs.readFileSync(gitignorePath, 'utf-8');
+    expect(content).toContain('.ralph-dev/state.json');
+    expect(content).toContain('.ralph-dev/saga.log');
+    expect(content).toContain('!.ralph-dev/prd.md');
+    expect(content).toContain('!.ralph-dev/tasks/');
+  });
+
+  it('should not duplicate gitignore entries if already present', async () => {
+    const saga = new Phase2Saga(testDir);
+    const steps = saga.createSagaSteps();
+    const gitignoreStep = steps.find(s => s.name === 'verify_gitignore');
+
+    const gitignorePath = path.join(testDir, '.gitignore');
+
+    // Pre-populate .gitignore with ralph-dev entries
+    fs.writeFileSync(
+      gitignorePath,
+      '# Ralph-dev temporary files\n.ralph-dev/state.json\n.ralph-dev/progress.log\n',
+      'utf-8'
+    );
+
+    const beforeContent = fs.readFileSync(gitignorePath, 'utf-8');
+
+    // Execute - should not duplicate entries
+    await gitignoreStep!.execute();
+
+    const afterContent = fs.readFileSync(gitignorePath, 'utf-8');
+    expect(afterContent).toBe(beforeContent); // No changes
+  });
+
+  it('should create backup of existing tasks', async () => {
+    const saga = new Phase2Saga(testDir);
+    const steps = saga.createSagaSteps();
+    const backupStep = steps.find(s => s.name === 'backup_existing_state');
+
+    expect(backupStep).toBeDefined();
+
+    // Create existing tasks directory
+    const tasksDir = path.join(testDir, '.ralph-dev', 'tasks');
+    fs.ensureDirSync(tasksDir);
+    fs.writeFileSync(path.join(tasksDir, 'test.md'), 'test content', 'utf-8');
+
+    // Execute backup
+    await backupStep!.execute();
+
+    // Verify backup was created
+    const backupDir = path.join(testDir, '.ralph-dev', 'backups');
+    expect(fs.existsSync(backupDir)).toBe(true);
+
+    const backups = fs.readdirSync(backupDir);
+    expect(backups.length).toBeGreaterThan(0);
+    expect(backups[0]).toContain('before-breakdown');
   });
 });
 
