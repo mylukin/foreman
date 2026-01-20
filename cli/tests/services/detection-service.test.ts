@@ -2,10 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   DetectionService,
   ILanguageDetector,
-  IIndexManager,
 } from '../../src/services/detection-service';
 import { LanguageConfig } from '../../src/language/detector';
-import { TaskIndex } from '../../src/core/index-manager';
+import { IIndexRepository, TaskIndex, MetadataUpdate } from '../../src/repositories/index-repository';
 import { ILogger } from '../../src/infrastructure/logger';
 
 /**
@@ -30,9 +29,9 @@ class MockLanguageDetector implements ILanguageDetector {
 }
 
 /**
- * Mock IndexManager for testing
+ * Mock IndexRepository for testing (async interface)
  */
-class MockIndexManager implements IIndexManager {
+class MockIndexRepository implements IIndexRepository {
   private index: TaskIndex = {
     version: '1.0.0',
     updatedAt: new Date().toISOString(),
@@ -42,17 +41,45 @@ class MockIndexManager implements IIndexManager {
     tasks: {},
   };
 
-  readIndex(): TaskIndex {
+  async read(): Promise<TaskIndex> {
     return this.index;
   }
 
-  writeIndex(index: TaskIndex): void {
+  async write(index: TaskIndex): Promise<void> {
     this.index = { ...index, updatedAt: new Date().toISOString() };
   }
 
-  updateMetadata(metadata: Partial<TaskIndex['metadata']>): void {
+  async upsertTask(_taskId: string, _entry: any): Promise<void> {
+    // Not needed for detection service tests
+  }
+
+  async updateTaskStatus(_taskId: string, _status: string): Promise<void> {
+    // Not needed for detection service tests
+  }
+
+  getTaskFilePath(_taskId: string): string | null {
+    return null;
+  }
+
+  async getNextTask(): Promise<string | null> {
+    return null;
+  }
+
+  async updateMetadata(metadata: MetadataUpdate): Promise<void> {
     this.index.metadata = { ...this.index.metadata, ...metadata };
     this.index.updatedAt = new Date().toISOString();
+  }
+
+  async hasTask(_taskId: string): Promise<boolean> {
+    return false;
+  }
+
+  async getAllTaskIds(): Promise<string[]> {
+    return [];
+  }
+
+  async getTasksByStatus(_status: string): Promise<string[]> {
+    return [];
   }
 
   // Test helper
@@ -90,16 +117,16 @@ class MockLogger implements ILogger {
 
 describe('DetectionService', () => {
   let detector: MockLanguageDetector;
-  let indexManager: MockIndexManager;
+  let indexRepository: MockIndexRepository;
   let logger: MockLogger;
   let service: DetectionService;
   const workspaceDir = '/test/workspace';
 
   beforeEach(() => {
     detector = new MockLanguageDetector();
-    indexManager = new MockIndexManager();
+    indexRepository = new MockIndexRepository();
     logger = new MockLogger();
-    service = new DetectionService(detector, indexManager, logger, workspaceDir);
+    service = new DetectionService(detector, indexRepository, logger, workspaceDir);
   });
 
   describe('detect', () => {
@@ -242,7 +269,7 @@ describe('DetectionService', () => {
   });
 
   describe('detectAndSave', () => {
-    it('should detect and save language configuration', () => {
+    it('should detect and save language configuration', async () => {
       // Arrange
       const expectedConfig: LanguageConfig = {
         language: 'typescript',
@@ -253,14 +280,14 @@ describe('DetectionService', () => {
       detector.setMockConfig(expectedConfig);
 
       // Act
-      const result = service.detectAndSave();
+      const result = await service.detectAndSave();
 
       // Assert
       expect(result.languageConfig).toEqual(expectedConfig);
       expect(result.saved).toBe(true);
     });
 
-    it('should save configuration to index metadata', () => {
+    it('should save configuration to index metadata', async () => {
       // Arrange
       const expectedConfig: LanguageConfig = {
         language: 'python',
@@ -270,16 +297,16 @@ describe('DetectionService', () => {
       detector.setMockConfig(expectedConfig);
 
       // Act
-      service.detectAndSave();
+      await service.detectAndSave();
 
       // Assert
-      const metadata = indexManager.getMetadata();
+      const metadata = indexRepository.getMetadata();
       expect(metadata.languageConfig).toEqual(expectedConfig);
     });
 
-    it('should preserve existing metadata when saving', () => {
+    it('should preserve existing metadata when saving', async () => {
       // Arrange
-      indexManager.updateMetadata({ projectGoal: 'Build awesome app' });
+      await indexRepository.updateMetadata({ projectGoal: 'Build awesome app' });
       const expectedConfig: LanguageConfig = {
         language: 'go',
         testFramework: 'go test',
@@ -288,47 +315,54 @@ describe('DetectionService', () => {
       detector.setMockConfig(expectedConfig);
 
       // Act
-      service.detectAndSave();
+      await service.detectAndSave();
 
       // Assert
-      const metadata = indexManager.getMetadata();
+      const metadata = indexRepository.getMetadata();
       expect(metadata.projectGoal).toBe('Build awesome app');
       expect(metadata.languageConfig).toEqual(expectedConfig);
     });
 
-    it('should return saved: true on successful save', () => {
+    it('should return saved: true on successful save', async () => {
       // Act
-      const result = service.detectAndSave();
+      const result = await service.detectAndSave();
 
       // Assert
       expect(result.saved).toBe(true);
     });
 
-    it('should return saved: false when save fails', () => {
+    it('should return saved: false when save fails', async () => {
       // Arrange
-      const failingIndexManager: IIndexManager = {
-        readIndex: () => indexManager.readIndex(),
-        writeIndex: (index) => indexManager.writeIndex(index),
-        updateMetadata: () => {
+      const failingIndexRepository: IIndexRepository = {
+        read: async () => indexRepository.read(),
+        write: async (index) => indexRepository.write(index),
+        upsertTask: async () => {},
+        updateTaskStatus: async () => {},
+        getTaskFilePath: () => null,
+        getNextTask: async () => null,
+        updateMetadata: async () => {
           throw new Error('Save failed');
         },
+        hasTask: async () => false,
+        getAllTaskIds: async () => [],
+        getTasksByStatus: async () => [],
       };
       const failingService = new DetectionService(
         detector,
-        failingIndexManager,
+        failingIndexRepository,
         logger,
         workspaceDir
       );
 
       // Act
-      const result = failingService.detectAndSave();
+      const result = await failingService.detectAndSave();
 
       // Assert
       expect(result.saved).toBe(false);
       expect(result.languageConfig).toBeDefined();
     });
 
-    it('should still return languageConfig when save fails', () => {
+    it('should still return languageConfig when save fails', async () => {
       // Arrange
       const expectedConfig: LanguageConfig = {
         language: 'rust',
@@ -337,31 +371,38 @@ describe('DetectionService', () => {
       };
       detector.setMockConfig(expectedConfig);
 
-      const failingIndexManager: IIndexManager = {
-        readIndex: () => indexManager.readIndex(),
-        writeIndex: (index) => indexManager.writeIndex(index),
-        updateMetadata: () => {
+      const failingIndexRepository: IIndexRepository = {
+        read: async () => indexRepository.read(),
+        write: async (index) => indexRepository.write(index),
+        upsertTask: async () => {},
+        updateTaskStatus: async () => {},
+        getTaskFilePath: () => null,
+        getNextTask: async () => null,
+        updateMetadata: async () => {
           throw new Error('Save failed');
         },
+        hasTask: async () => false,
+        getAllTaskIds: async () => [],
+        getTasksByStatus: async () => [],
       };
       const failingService = new DetectionService(
         detector,
-        failingIndexManager,
+        failingIndexRepository,
         logger,
         workspaceDir
       );
 
       // Act
-      const result = failingService.detectAndSave();
+      const result = await failingService.detectAndSave();
 
       // Assert
       expect(result.languageConfig).toEqual(expectedConfig);
       expect(result.saved).toBe(false);
     });
 
-    it('should log save operation', () => {
+    it('should log save operation', async () => {
       // Act
-      service.detectAndSave();
+      await service.detectAndSave();
 
       // Assert
       expect(logger.logs.some((l) => l.level === 'info' && l.message.includes('Saving'))).toBe(true);
@@ -370,24 +411,31 @@ describe('DetectionService', () => {
       );
     });
 
-    it('should log error when save fails', () => {
+    it('should log error when save fails', async () => {
       // Arrange
-      const failingIndexManager: IIndexManager = {
-        readIndex: () => indexManager.readIndex(),
-        writeIndex: (index) => indexManager.writeIndex(index),
-        updateMetadata: () => {
+      const failingIndexRepository: IIndexRepository = {
+        read: async () => indexRepository.read(),
+        write: async (index) => indexRepository.write(index),
+        upsertTask: async () => {},
+        updateTaskStatus: async () => {},
+        getTaskFilePath: () => null,
+        getNextTask: async () => null,
+        updateMetadata: async () => {
           throw new Error('Disk full');
         },
+        hasTask: async () => false,
+        getAllTaskIds: async () => [],
+        getTasksByStatus: async () => [],
       };
       const failingService = new DetectionService(
         detector,
-        failingIndexManager,
+        failingIndexRepository,
         logger,
         workspaceDir
       );
 
       // Act
-      failingService.detectAndSave();
+      await failingService.detectAndSave();
 
       // Assert
       expect(logger.logs.some((l) => l.level === 'error' && l.message.includes('Failed to save'))).toBe(
@@ -395,7 +443,7 @@ describe('DetectionService', () => {
       );
     });
 
-    it('should detect multiple times independently', () => {
+    it('should detect multiple times independently', async () => {
       // Arrange
       const config1: LanguageConfig = {
         language: 'typescript',
@@ -408,17 +456,17 @@ describe('DetectionService', () => {
 
       // Act 1
       detector.setMockConfig(config1);
-      const result1 = service.detectAndSave();
+      const result1 = await service.detectAndSave();
 
       // Act 2
       detector.setMockConfig(config2);
-      const result2 = service.detectAndSave();
+      const result2 = await service.detectAndSave();
 
       // Assert
       expect(result1.languageConfig.language).toBe('typescript');
       expect(result2.languageConfig.language).toBe('python');
 
-      const metadata = indexManager.getMetadata();
+      const metadata = indexRepository.getMetadata();
       expect(metadata.languageConfig?.language).toBe('python'); // Latest config
     });
   });

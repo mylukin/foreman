@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
 import { registerDetectAICommand } from '../../src/commands/detect-ai';
-import { IndexManager } from '../../src/core/index-manager';
+import { FileSystemIndexRepository } from '../../src/repositories/index-repository.service';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
 // Mock modules
-vi.mock('../../src/core/index-manager');
+vi.mock('../../src/repositories/index-repository.service');
 
 describe('detect-ai commands', () => {
   let program: Command;
@@ -136,8 +136,8 @@ describe('detect-ai commands', () => {
         evidence: ['tsconfig.json exists', '50 .ts files found'],
       };
 
-      const mockUpdateMetadata = vi.fn();
-      vi.mocked(IndexManager).mockImplementation(() => ({
+      const mockUpdateMetadata = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(FileSystemIndexRepository).mockImplementation(() => ({
         updateMetadata: mockUpdateMetadata,
       } as any));
 
@@ -158,8 +158,8 @@ describe('detect-ai commands', () => {
         evidence: ['manage.py exists', 'requirements.txt exists'],
       };
 
-      const mockUpdateMetadata = vi.fn();
-      vi.mocked(IndexManager).mockImplementation(() => ({
+      const mockUpdateMetadata = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(FileSystemIndexRepository).mockImplementation(() => ({
         updateMetadata: mockUpdateMetadata,
       } as any));
 
@@ -181,8 +181,8 @@ describe('detect-ai commands', () => {
         verifyCommands: ['go test ./...', 'go build', 'go vet ./...'],
       };
 
-      const mockUpdateMetadata = vi.fn();
-      vi.mocked(IndexManager).mockImplementation(() => ({
+      const mockUpdateMetadata = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(FileSystemIndexRepository).mockImplementation(() => ({
         updateMetadata: mockUpdateMetadata,
       } as any));
 
@@ -242,7 +242,7 @@ describe('detect-ai commands', () => {
         verifyCommands: ['cargo test', 'cargo build'],
       };
 
-      vi.mocked(IndexManager).mockImplementation(() => {
+      vi.mocked(FileSystemIndexRepository).mockImplementation(() => {
         throw new Error('Failed to update metadata');
       });
 
@@ -259,8 +259,8 @@ describe('detect-ai commands', () => {
         verifyCommands: ['npm test'],
       };
 
-      const mockUpdateMetadata = vi.fn();
-      vi.mocked(IndexManager).mockImplementation(() => ({
+      const mockUpdateMetadata = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(FileSystemIndexRepository).mockImplementation(() => ({
         updateMetadata: mockUpdateMetadata,
       } as any));
 
@@ -280,8 +280,8 @@ describe('detect-ai commands', () => {
         verifyCommands: ['mvn test'],
       };
 
-      const mockUpdateMetadata = vi.fn();
-      vi.mocked(IndexManager).mockImplementation(() => ({
+      const mockUpdateMetadata = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(FileSystemIndexRepository).mockImplementation(() => ({
         updateMetadata: mockUpdateMetadata,
       } as any));
 

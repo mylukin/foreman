@@ -2,11 +2,11 @@
  * DetectionService - Business logic for language detection
  *
  * Extracts language detection operations from CLI commands into testable service layer.
- * Uses dependency injection for detector, index manager, and logger.
+ * Uses dependency injection for detector, index repository, and logger.
  */
 
 import { LanguageConfig } from '../language/detector';
-import { TaskIndex } from '../core/index-manager';
+import { IIndexRepository } from '../repositories/index-repository';
 import { ILogger } from '../infrastructure/logger';
 
 /**
@@ -14,15 +14,6 @@ import { ILogger } from '../infrastructure/logger';
  */
 export interface ILanguageDetector {
   detect(projectPath: string): LanguageConfig;
-}
-
-/**
- * IIndexManager interface for dependency injection
- */
-export interface IIndexManager {
-  readIndex(): TaskIndex;
-  writeIndex(index: TaskIndex): void;
-  updateMetadata(metadata: Partial<TaskIndex['metadata']>): void;
 }
 
 /**
@@ -45,7 +36,7 @@ export interface IDetectionService {
   /**
    * Detect and save to index metadata
    */
-  detectAndSave(): DetectionResult;
+  detectAndSave(): Promise<DetectionResult>;
 }
 
 /**
@@ -54,7 +45,7 @@ export interface IDetectionService {
 export class DetectionService implements IDetectionService {
   constructor(
     private languageDetector: ILanguageDetector,
-    private indexManager: IIndexManager,
+    private indexRepository: IIndexRepository,
     private logger: ILogger,
     private workspaceDir: string
   ) {}
@@ -74,13 +65,13 @@ export class DetectionService implements IDetectionService {
     return languageConfig;
   }
 
-  detectAndSave(): DetectionResult {
+  async detectAndSave(): Promise<DetectionResult> {
     const languageConfig = this.detect();
 
     this.logger.info('Saving language configuration to index');
 
     try {
-      this.indexManager.updateMetadata({ languageConfig });
+      await this.indexRepository.updateMetadata({ languageConfig });
       this.logger.info('Language configuration saved to index');
 
       return {

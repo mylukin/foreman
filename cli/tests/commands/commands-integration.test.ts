@@ -353,7 +353,7 @@ describe('Commands Integration Tests', () => {
       fs.writeFileSync(path.join(workspaceDir, 'tsconfig.json'), '{}');
 
       // Act
-      const result = services.detectionService.detectAndSave();
+      const result = await services.detectionService.detectAndSave();
 
       // Assert
       expect(result.saved).toBe(true);
@@ -372,7 +372,7 @@ describe('Commands Integration Tests', () => {
       fs.writeFileSync(path.join(workspaceDir, 'tsconfig.json'), '{}');
 
       // Act - Detect and save
-      const result = services.detectionService.detectAndSave();
+      const result = await services.detectionService.detectAndSave();
 
       // Assert - Result is correct
       expect(result.saved).toBe(true);

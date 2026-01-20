@@ -14,7 +14,7 @@ import { HealingService, IHealingService } from '../services/healing-service';
 import { FileSystemTaskRepository } from '../repositories/task-repository.service';
 import { FileSystemStateRepository } from '../repositories/state-repository.service';
 import { LanguageDetector } from '../language/detector';
-import { IndexManager } from '../core/index-manager';
+import { FileSystemIndexRepository } from '../repositories/index-repository.service';
 import { FileSystemService } from '../infrastructure/file-system.service';
 import { ConsoleLogger } from '../infrastructure/logger.service';
 import { ILogger } from '../infrastructure/logger';
@@ -50,10 +50,10 @@ export function createServices(workspaceDir: string): ServiceContainer {
   const statusService = new StatusService(taskRepository, stateRepository, logger);
 
   // Detection service
-  const indexManager = new IndexManager(tasksDir);
+  const indexRepository = new FileSystemIndexRepository(fileSystem, tasksDir);
   const detectionService = new DetectionService(
     LanguageDetector,
-    indexManager,
+    indexRepository,
     logger,
     workspaceDir
   );
@@ -117,8 +117,9 @@ export function createStateService(workspaceDir: string): IStateService {
  */
 export function createDetectionService(workspaceDir: string): IDetectionService {
   const logger = new ConsoleLogger();
+  const fileSystem = new FileSystemService();
   const tasksDir = path.join(workspaceDir, '.ralph-dev', 'tasks');
-  const indexManager = new IndexManager(tasksDir);
+  const indexRepository = new FileSystemIndexRepository(fileSystem, tasksDir);
 
-  return new DetectionService(LanguageDetector, indexManager, logger, workspaceDir);
+  return new DetectionService(LanguageDetector, indexRepository, logger, workspaceDir);
 }

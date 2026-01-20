@@ -3,8 +3,9 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { execSync } from 'child_process';
 import chalk from 'chalk';
-import { TaskParser } from '../core/task-parser';
-import { IndexManager } from '../core/index-manager';
+import { IIndexRepository } from '../repositories/index-repository';
+import { FileSystemIndexRepository } from '../repositories/index-repository.service';
+import { FileSystemService } from '../infrastructure/file-system.service';
 import { ExitCode } from '../core/exit-codes';
 import { handleError, Errors } from '../core/error-handler';
 import { successResponse, outputResponse } from '../core/response-wrapper';
@@ -14,7 +15,7 @@ import { Task } from '../domain/task-entity';
 /**
  * Helper function to gather context for next task display
  */
-function gatherContext(workspaceDir: string, indexManager: IndexManager, task: Task): any {
+async function gatherContext(workspaceDir: string, indexRepository: IIndexRepository, task: Task): Promise<any> {
   const context: any = {};
 
   // Current directory
@@ -40,7 +41,7 @@ function gatherContext(workspaceDir: string, indexManager: IndexManager, task: T
   }
 
   // Progress statistics
-  const index = indexManager.readIndex();
+  const index = await indexRepository.read();
   const allTasks = Object.entries(index.tasks);
   const completed = allTasks.filter(([, t]) => t.status === 'completed').length;
   const failed = allTasks.filter(([, t]) => t.status === 'failed').length;
@@ -175,7 +176,8 @@ function formatNextTaskOutput(task: Task, context: any): void {
 
 export function registerTaskCommands(program: Command, workspaceDir: string): void {
   const tasksDir = path.join(workspaceDir, '.ralph-dev', 'tasks');
-  const indexManager = new IndexManager(tasksDir);
+  const fileSystem = new FileSystemService();
+  const indexRepository = new FileSystemIndexRepository(fileSystem, tasksDir);
   const taskService = createTaskService(workspaceDir);
 
   const tasks = program.command('tasks').description('Manage tasks');
@@ -187,8 +189,8 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
     .option('--project-goal <goal>', 'Project goal description')
     .option('--language <language>', 'Programming language')
     .option('--framework <framework>', 'Framework name')
-    .action((options) => {
-      const index = indexManager.readIndex();
+    .action(async (options) => {
+      const index = await indexRepository.read();
 
       if (options.projectGoal) {
         index.metadata.projectGoal = options.projectGoal;
@@ -201,7 +203,7 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
         };
       }
 
-      indexManager.writeIndex(index);
+      await indexRepository.write(index);
       console.log(chalk.green('✅ Tasks system initialized'));
       console.log(chalk.gray(`   Location: ${tasksDir}/index.json`));
     });
@@ -319,7 +321,7 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
         }
 
         // Gather context (keep in command for now - presentation logic)
-        const context = gatherContext(workspaceDir, indexManager, task);
+        const context = await gatherContext(workspaceDir, indexRepository, task);
 
         // Format output
         if (options.json) {

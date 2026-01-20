@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'path';
-import * as fs from 'fs-extra';
-import { IndexManager } from '../core/index-manager';
+import { FileSystemIndexRepository } from '../repositories/index-repository.service';
+import { FileSystemService } from '../infrastructure/file-system.service';
 
 /**
  * AI-powered language detection command
@@ -67,7 +67,7 @@ export function registerDetectAICommand(program: Command, workspaceDir: string):
   program
     .command('detect-ai-save <result>')
     .description('Save AI detection result to index metadata')
-    .action((result) => {
+    .action(async (result) => {
       try {
         const languageConfig = JSON.parse(result);
 
@@ -78,10 +78,11 @@ export function registerDetectAICommand(program: Command, workspaceDir: string):
           process.exit(1);
         }
 
-        // Save to index
+        // Save to index using FileSystemIndexRepository
         const tasksDir = path.join(workspaceDir, '.ralph-dev', 'tasks');
-        const indexManager = new IndexManager(tasksDir);
-        indexManager.updateMetadata({ languageConfig });
+        const fileSystem = new FileSystemService();
+        const indexRepository = new FileSystemIndexRepository(fileSystem, tasksDir);
+        await indexRepository.updateMetadata({ languageConfig });
 
         console.log(chalk.green('✅ Language configuration saved to index metadata'));
         console.log(chalk.bold('\nDetected Configuration:'));
