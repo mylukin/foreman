@@ -472,9 +472,10 @@ Recovery process:
 │   └─► hooks/pre-compact.sh                                                 │
 │       └─► Save current state to disk                                       │
 │                                                                             │
-│   Stop (session end)                                                        │
+│   Stop (on each response - ralph-loop pattern)                              │
 │   └─► hooks/stop-hook.sh                                                   │
-│       └─► Save final state, cleanup                                        │
+│       └─► If phase != "complete": Block exit, prompt to resume workflow    │
+│       └─► If phase == "complete" or no session: Allow exit                 │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
