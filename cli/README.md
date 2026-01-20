@@ -1,7 +1,5 @@
 # Ralph-dev CLI
 
-[中文](./README_ZH.md) | **English**
-
 TypeScript command-line tool for Ralph-dev state and task management.
 
 ## Overview
