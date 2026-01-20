@@ -548,10 +548,74 @@ dependencies:
 
 ## Environment Variables
 
+### Core Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `CI` | Enable CI mode for tests (non-interactive) | - |
+| `RALPH_DEV_WORKSPACE` | Override workspace directory | `process.cwd()` |
+
+### Bootstrap Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `SKIP_BOOTSTRAP` | Skip automatic CLI bootstrap | `0` |
+| `FORCE_REBUILD` | Force local CLI rebuild | `0` |
+
+### CI/CD Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `RALPH_DEV_CI_MODE` | Enable CI mode | `false` |
+| `RALPH_DEV_AUTO_APPROVE` | Auto-approve task breakdown | `false` |
+| `SLACK_WEBHOOK_URL` | Slack notifications webhook | - |
+
+### Claude Code Variables (System-provided)
+
 | Variable | Purpose |
 |----------|---------|
-| `RALPH_DEV_WORKSPACE` | Override workspace directory |
-| `CI` | Set to `true` for CI/test mode |
+| `CLAUDE_PLUGIN_ROOT` | Plugin installation directory |
+| `CLAUDE_PROJECT_DIR` | Current project directory |
+| `CLAUDE_ENV_FILE` | Environment file for persistence |
+
+## CI/CD Configuration
+
+For CI/CD automation, create `.ralph-dev/ci-config.yml`:
+
+```yaml
+ci_mode:
+  enabled: true
+  auto_approve_breakdown: true
+
+  # Pre-defined answers for Phase 1 (no interactive questions)
+  clarify_answers:
+    project_type: "Web application"
+    tech_stack: "TypeScript"
+    scale: "Production"
+
+  # Resource limits
+  limits:
+    max_tasks: 50
+    max_healing_time: "30m"
+    max_total_time: "4h"
+
+  # Notifications
+  notifications:
+    slack_webhook: "https://hooks.slack.com/..."
+    on_success: true
+    on_failure: true
+
+  # Git configuration
+  git:
+    author: "CI Bot <[email protected]>"
+    branch_prefix: "ralph-dev/"
+
+  # PR configuration
+  pr:
+    labels: ["auto-generated", "ralph-dev"]
+    reviewers: ["team-lead"]
+    auto_merge_on_success: false
+```
 
 ---
 

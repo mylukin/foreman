@@ -64,6 +64,18 @@ For CLI-specific implementation details, see:
 When user says "发布 cli release" or "publish cli release", execute the following steps automatically:
 > 当用户说"发布 cli release"时，自动执行以下步骤：
 
+### Version Files (MUST Keep in Sync)
+> 版本文件（必须保持同步）
+
+When releasing a new version, **ALL** of the following files must be updated:
+> 发布新版本时，必须更新以下**所有**文件：
+
+| File | Field(s) to Update |
+|------|-------------------|
+| `cli/package.json` | `version` (source of truth) |
+| `.claude-plugin/plugin.json` | `version` |
+| `.claude-plugin/marketplace.json` | `version`, `metadata.version`, `plugins[0].version` |
+
 ### Release Steps
 
 ```bash
@@ -73,15 +85,23 @@ cd cli && CI=true npm test && npm run lint && npm run build
 # Step 2: Determine version bump (ask user if not specified)
 # Options: patch (0.0.x), minor (0.x.0), major (x.0.0)
 
-# Step 3: Bump version
-npm version <patch|minor|major>
+# Step 3: Bump CLI version
+npm version <patch|minor|major> --no-git-tag-version
 
-# Step 4: Commit and tag
-cd .. && git add cli/package.json
-git commit -m "chore(cli): release v$(node -p \"require('./cli/package.json').version\")"
-git tag cli-v$(node -p "require('./cli/package.json').version")
+# Step 4: Sync version to plugin files (CRITICAL)
+VERSION=$(node -p "require('./package.json').version")
+cd ..
+# Update plugin.json
+jq --arg v "$VERSION" '.version = $v' .claude-plugin/plugin.json > tmp.json && mv tmp.json .claude-plugin/plugin.json
+# Update marketplace.json (3 places)
+jq --arg v "$VERSION" '.version = $v | .metadata.version = $v | .plugins[0].version = $v' .claude-plugin/marketplace.json > tmp.json && mv tmp.json .claude-plugin/marketplace.json
 
-# Step 5: Push to trigger GitHub Actions
+# Step 5: Commit and tag
+git add cli/package.json .claude-plugin/plugin.json .claude-plugin/marketplace.json
+git commit -m "chore(cli): release v${VERSION}"
+git tag cli-v${VERSION}
+
+# Step 6: Push to trigger GitHub Actions
 git push origin main --tags
 ```
 
