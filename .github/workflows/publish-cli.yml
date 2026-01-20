@@ -11,8 +11,9 @@ jobs:
 
     # Required for npm Trusted Publisher (OIDC)
     permissions:
-      id-token: write    # For npm provenance
-      contents: write    # For GitHub Release
+      id-token: write       # For npm OIDC token
+      contents: write       # For GitHub Release
+      attestations: write   # For npm provenance attestations
 
     defaults:
       run:
