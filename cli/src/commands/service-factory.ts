@@ -10,7 +10,6 @@ import { TaskService, ITaskService } from '../services/task-service';
 import { StateService, IStateService } from '../services/state-service';
 import { StatusService, IStatusService } from '../services/status-service';
 import { DetectionService, IDetectionService } from '../services/detection-service';
-import { SagaService, ISagaService } from '../services/saga-service';
 import { HealingService, IHealingService } from '../services/healing-service';
 import { FileSystemTaskRepository } from '../repositories/task-repository.service';
 import { FileSystemStateRepository } from '../repositories/state-repository.service';
@@ -28,7 +27,6 @@ export interface ServiceContainer {
   stateService: IStateService;
   statusService: IStatusService;
   detectionService: IDetectionService;
-  sagaService: ISagaService;
   healingService: IHealingService;
   logger: ILogger;
 }
@@ -60,9 +58,6 @@ export function createServices(workspaceDir: string): ServiceContainer {
     workspaceDir
   );
 
-  // Saga service
-  const sagaService = new SagaService(logger, workspaceDir);
-
   // Healing service with circuit breaker
   const healingService = new HealingService(logger, fileSystem, workspaceDir, {
     failureThreshold: 5,
@@ -75,7 +70,6 @@ export function createServices(workspaceDir: string): ServiceContainer {
     stateService,
     statusService,
     detectionService,
-    sagaService,
     healingService,
     logger,
   };

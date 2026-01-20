@@ -8,5 +8,4 @@
 export * from './task-service';
 export * from './state-service';
 export * from './detection-service';
-export * from './saga-service';
 export * from './healing-service';
