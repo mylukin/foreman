@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "ralph-dev",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Autonomous end-to-end development system that transforms requirements into production-ready code",
   "owner": {
     "name": "Lukin",
@@ -9,7 +9,7 @@
   },
   "metadata": {
     "description": "Autonomous end-to-end development system that transforms requirements into production-ready code with zero manual intervention",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "homepage": "https://github.com/mylukin/ralph-dev",
     "repository": "https://github.com/mylukin/ralph-dev"
   },
@@ -18,7 +18,7 @@
       "name": "ralph-dev",
       "source": "./",
       "description": "Autonomous end-to-end development system - from requirement to production-ready code with zero manual intervention",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "author": {
         "name": "Lukin",
         "email": "[email protected]"

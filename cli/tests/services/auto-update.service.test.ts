@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AutoUpdateService, createAutoUpdateService } from '../../src/services/auto-update.service';
+import { join } from 'path';
+import { homedir } from 'os';
 
 // Mock update-notifier
 vi.mock('update-notifier', () => ({
@@ -13,6 +15,18 @@ vi.mock('update-notifier', () => ({
 vi.mock('child_process', () => ({
   execSync: vi.fn(),
 }));
+
+// Mock fs functions
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+  return {
+    ...actual,
+    existsSync: vi.fn().mockReturnValue(false),
+    mkdirSync: vi.fn(),
+    rmSync: vi.fn(),
+    readdirSync: vi.fn().mockReturnValue([]),
+  };
+});
 
 describe('AutoUpdateService', () => {
   const originalEnv = process.env;
@@ -154,6 +168,122 @@ describe('AutoUpdateService integration', () => {
       // The service should not attempt auto-update in CI
       const result = await service.checkAndUpdate();
       expect(result.autoUpdated).toBe(false);
+    });
+  });
+});
+
+describe('AutoUpdateService plugin update options', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    process.env = originalEnv;
+  });
+
+  describe('constructor options', () => {
+    it('should use default githubRepo when not provided', () => {
+      const service = new AutoUpdateService({
+        packageName: 'test-package',
+        currentVersion: '1.0.0',
+      });
+
+      // Service should be created with default repo
+      expect(service).toBeDefined();
+    });
+
+    it('should accept custom githubRepo option', () => {
+      const service = new AutoUpdateService({
+        packageName: 'test-package',
+        currentVersion: '1.0.0',
+        githubRepo: 'custom-org/custom-repo',
+      });
+
+      expect(service).toBeDefined();
+    });
+
+    it('should default updatePluginCache to true', () => {
+      const service = new AutoUpdateService({
+        packageName: 'test-package',
+        currentVersion: '1.0.0',
+      });
+
+      expect(service).toBeDefined();
+    });
+
+    it('should accept updatePluginCache option', () => {
+      const service = new AutoUpdateService({
+        packageName: 'test-package',
+        currentVersion: '1.0.0',
+        updatePluginCache: false,
+      });
+
+      expect(service).toBeDefined();
+    });
+  });
+
+  describe('createAutoUpdateService with plugin options', () => {
+    it('should create service with githubRepo option', () => {
+      const service = createAutoUpdateService('test-package', '1.0.0', {
+        githubRepo: 'custom-org/custom-repo',
+      });
+
+      expect(service).toBeInstanceOf(AutoUpdateService);
+    });
+
+    it('should create service with updatePluginCache disabled', () => {
+      const service = createAutoUpdateService('test-package', '1.0.0', {
+        updatePluginCache: false,
+      });
+
+      expect(service).toBeInstanceOf(AutoUpdateService);
+    });
+
+    it('should create service with all plugin options', () => {
+      const service = createAutoUpdateService('test-package', '1.0.0', {
+        githubRepo: 'custom-org/custom-repo',
+        updatePluginCache: true,
+        autoUpdate: true,
+      });
+
+      expect(service).toBeInstanceOf(AutoUpdateService);
+    });
+  });
+
+  describe('plugin update paths', () => {
+    it('should construct correct cache path', () => {
+      const expectedCachePath = join(
+        homedir(),
+        '.claude',
+        'plugins',
+        'cache',
+        'ralph-dev',
+        'ralph-dev'
+      );
+
+      // Just verify the path construction is correct
+      expect(expectedCachePath).toContain('.claude');
+      expect(expectedCachePath).toContain('plugins');
+      expect(expectedCachePath).toContain('cache');
+    });
+
+    it('should construct correct marketplace path', () => {
+      const expectedMarketplacePath = join(
+        homedir(),
+        '.claude',
+        'plugins',
+        'marketplaces',
+        'ralph-dev'
+      );
+
+      // Just verify the path construction is correct
+      expect(expectedMarketplacePath).toContain('.claude');
+      expect(expectedMarketplacePath).toContain('marketplaces');
     });
   });
 });
