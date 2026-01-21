@@ -10,3 +10,4 @@ export * from './state-service';
 export * from './status-service';
 export * from './detection-service';
 export * from './context-service';
+export * from './auto-update.service';

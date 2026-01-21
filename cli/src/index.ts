@@ -8,7 +8,8 @@ import { registerDetectCommand } from './commands/detect';
 import { registerDetectAICommand } from './commands/detect-ai';
 import { registerInitCommand } from './commands/init';
 import { registerCircuitBreakerCommand } from './commands/circuit-breaker';
-import { version } from '../package.json';
+import { createAutoUpdateService } from './services/auto-update.service';
+import { version, name } from '../package.json';
 
 const program = new Command();
 
@@ -28,6 +29,21 @@ registerDetectCommand(program, workspaceDir);
 registerDetectAICommand(program, workspaceDir);
 registerInitCommand(program, workspaceDir);
 registerCircuitBreakerCommand(program, workspaceDir);
+
+// Auto-update check (non-blocking, runs in background)
+// Skip if NO_UPDATE_NOTIFIER is set or in CI environment
+const shouldCheckUpdate = !process.env.NO_UPDATE_NOTIFIER && !process.env.CI;
+
+if (shouldCheckUpdate) {
+  const updateService = createAutoUpdateService(name, version, {
+    autoUpdate: true,
+  });
+
+  // Run update check in background (don't await to not block CLI)
+  updateService.checkAndUpdate().catch(() => {
+    // Silently ignore update check errors
+  });
+}
 
 // Parse command line arguments
 program.parse(process.argv);
