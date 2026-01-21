@@ -512,7 +512,7 @@ dependencies:
 |---------|-------------|
 | `ralph-dev state get --json` | Get current phase and task |
 | `ralph-dev state set --phase <phase>` | Set workflow phase |
-| `ralph-dev tasks create <id>` | Create new task |
+| `ralph-dev tasks create --id <id>` | Create new task |
 | `ralph-dev tasks list --json` | List all tasks |
 | `ralph-dev tasks next --json` | Get next pending task |
 | `ralph-dev tasks start <id>` | Mark task as in_progress |

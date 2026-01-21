@@ -83,7 +83,7 @@ CLARIFY → BREAKDOWN → IMPLEMENT ⇄ HEAL → DELIVER → COMPLETE
 - **Output:** \`.ralph-dev/tasks/*.md\` + \`index.json\`
 - **Create tasks via CLI:**
   \`\`\`bash
-  ralph-dev tasks create <id> --module <mod> --priority <n> --description "..."
+  ralph-dev tasks create --id <id> --module <mod> --priority <n> --description "..."
   \`\`\`
 - **REQUIRES:** User approval before transition
 - **Transition:** \`ralph-dev state set --phase implement\`
