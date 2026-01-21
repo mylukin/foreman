@@ -338,7 +338,7 @@ Ralph-dev 自动检测项目的语言并配置验证命令：
 
 ## 配置
 
-Ralph-dev 可以通过环境变量进行配置。详见[配置指南](docs/CONFIGURATION.md)。
+Ralph-dev 可以通过环境变量进行配置：
 
 ### 环境变量
 
@@ -478,6 +478,6 @@ MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
 
 ---
 
-**版本：** 0.2.0
-**状态：** 早期开发
+**版本：** 0.4.3
+**状态：** 活跃开发
 **作者：** Lukin ([email protected])
