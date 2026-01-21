@@ -355,18 +355,19 @@ ralph-dev tasks fail <taskId> --reason "..."   # Mark as failed
 \`\`\`bash
 # Detect language and framework
 ralph-dev detect --json
-ralph-dev detect --save    # Save to .ralph-dev/language.json
+ralph-dev detect --save    # Save to task index metadata
 
 # Output structure:
 # {
-#   "language": "typescript",
-#   "framework": "node",
-#   "testFramework": "vitest",
-#   "verifyCommands": {
-#     "test": "npm test",
-#     "lint": "npm run lint",
-#     "typecheck": "npx tsc --noEmit",
-#     "build": "npm run build"
+#   "languageConfig": {
+#     "language": "typescript",
+#     "testFramework": "vitest",
+#     "verifyCommands": [
+#       "npx tsc --noEmit",
+#       "npm run lint",
+#       "npm test",
+#       "npm run build"
+#     ]
 #   }
 # }
 \`\`\`
@@ -427,6 +428,70 @@ ralph-dev update --plugin-only
 # JSON output
 ralph-dev update --json
 \`\`\`
+
+---
+
+## AI-Powered Detection
+
+\`\`\`bash
+# AI-powered autonomous language detection
+ralph-dev detect-ai --json
+ralph-dev detect-ai --save    # Save to index metadata
+
+# Save AI detection result (used by detection skill)
+ralph-dev detect-ai-save '<json-result>'
+\`\`\`
+
+---
+
+## Circuit Breaker (Healing Phase)
+
+\`\`\`bash
+# Get circuit breaker status
+ralph-dev circuit-breaker status --json
+ralph-dev cb status --json              # Alias
+
+# Reset circuit breaker to CLOSED state
+ralph-dev cb reset --json
+
+# Record failure (used by Phase 4)
+ralph-dev cb fail --json
+
+# Record success (used by Phase 4)
+ralph-dev cb success --json
+\`\`\`
+
+**States:**
+- \`CLOSED\`: Normal operation, failures increment counter
+- \`OPEN\`: After 5 failures, blocks new attempts
+- \`HALF_OPEN\`: Recovery state, testing if service is healthy
+
+---
+
+## Batch Operations
+
+\`\`\`bash
+# Perform batch operations on multiple tasks
+ralph-dev tasks batch --operations '[
+  {"action":"start","taskId":"auth.login"},
+  {"action":"done","taskId":"auth.logout"}
+]' --json
+
+# Atomic mode - rollback all on any failure
+ralph-dev tasks batch --operations '[...]' --atomic --json
+\`\`\`
+
+---
+
+## Parse Agent Results
+
+\`\`\`bash
+# Parse structured result from agent output
+ralph-dev tasks parse-result --file /path/to/output.txt --json
+ralph-dev tasks parse-result --text "status: completed..." --json
+\`\`\`
+
+**Use case:** Extracts structured data from Phase 3 agent output.
 
 ---
 

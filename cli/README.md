@@ -367,6 +367,6 @@ MIT - Part of the Ralph-dev project
 
 ---
 
-**Version:** 0.2.0
-**Status:** Early development
+**Version:** 0.4.3
+**Status:** Active development
 **Repository:** https://github.com/mylukin/ralph-dev

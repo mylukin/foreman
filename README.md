@@ -338,7 +338,7 @@ For each task:
 
 ## Configuration
 
-Ralph-dev can be configured through environment variables. See [Configuration Guide](docs/CONFIGURATION.md) for details.
+Ralph-dev can be configured through environment variables:
 
 ### Environment Variables
 
@@ -507,6 +507,6 @@ Built for the Claude Code plugin ecosystem. Requires Claude Code CLI to function
 
 ---
 
-**Version:** 0.2.0
-**Status:** Early development
+**Version:** 0.4.3
+**Status:** Active development
 **Author:** Lukin ([email protected])
