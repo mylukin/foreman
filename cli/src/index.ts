@@ -38,13 +38,11 @@ const shouldCheckUpdate = !process.env.NO_UPDATE_NOTIFIER && !process.env.CI;
 
 if (shouldCheckUpdate) {
   const updateService = createAutoUpdateService(name, version, {
-    autoUpdate: true,
+    autoUpdate: false, // Don't auto-update, just show notification
   });
 
-  // Run update check in background (don't await to not block CLI)
-  updateService.checkAndUpdate().catch(() => {
-    // Silently ignore update check errors
-  });
+  // Show update notification (non-blocking)
+  updateService.notify();
 }
 
 // Parse command line arguments

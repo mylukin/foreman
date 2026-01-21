@@ -1,6 +1,6 @@
 {
   "name": "ralph-dev",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "CLI tool for Ralph-dev - efficient operations for AI agents",
   "main": "dist/index.js",
   "bin": {

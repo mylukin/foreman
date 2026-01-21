@@ -9,6 +9,7 @@ import { execSync } from 'child_process';
 import { existsSync, mkdirSync, rmSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
+import { createInterface } from 'readline';
 import chalk from 'chalk';
 import { ExitCode } from '../core/exit-codes';
 import { handleError, Errors } from '../core/error-handler';
@@ -32,6 +33,24 @@ interface UpdateResult {
 
 const GITHUB_REPO = 'mylukin/ralph-dev';
 const PACKAGE_NAME = 'ralph-dev';
+
+/**
+ * Prompt user for confirmation
+ */
+function askConfirmation(question: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question(question, (answer) => {
+      rl.close();
+      const normalized = answer.toLowerCase().trim();
+      resolve(normalized === 'y' || normalized === 'yes');
+    });
+  });
+}
 
 /**
  * Get the latest version from npm registry
@@ -285,8 +304,31 @@ export function registerUpdateCommand(program: Command): void {
           process.exit(ExitCode.SUCCESS);
         }
 
+        // Check for updates first
+        const latestVersion = getLatestVersion();
+        const hasUpdate = latestVersion ? latestVersion !== currentVersion : true; // Assume update if can't check
+        const versionKnown = latestVersion !== null;
+
+        if (!hasUpdate && !options.pluginOnly) {
+          console.log(chalk.green(`\n✓ CLI is already at the latest version (${currentVersion})\n`));
+        }
+
+        // Ask for confirmation if there's an update (skip in JSON mode or CI)
+        if (hasUpdate && !options.pluginOnly && !options.json && !process.env.CI) {
+          if (versionKnown) {
+            console.log(chalk.yellow(`\n📦 Update available: ${currentVersion} → ${latestVersion}\n`));
+          } else {
+            console.log(chalk.yellow(`\n📦 Checking for updates...\n`));
+          }
+          const confirmed = await askConfirmation('Do you want to update? (y/N): ');
+          if (!confirmed) {
+            console.log(chalk.dim('\nUpdate cancelled.\n'));
+            process.exit(ExitCode.SUCCESS);
+          }
+        }
+
         // Update CLI
-        if (!options.pluginOnly) {
+        if (!options.pluginOnly && hasUpdate) {
           const cliResult = updateCLI();
           result.cli.updated = cliResult.success;
           result.cli.newVersion = cliResult.newVersion;

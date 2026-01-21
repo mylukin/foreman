@@ -218,9 +218,14 @@ describe('Update Command Integration', () => {
 
       let callCount = 0;
       vi.mocked(execSync).mockImplementation((cmd: any) => {
+        const cmdStr = String(cmd);
         callCount++;
-        if (callCount === 1) throw new Error('npm failed');
-        return '0.5.0\n';
+        // First call is npm view (version check) - return higher version to trigger update
+        if (cmdStr.includes('npm view')) return '99.0.0\n';
+        // Second call is npm install - fail it
+        if (callCount === 2) throw new Error('npm failed');
+        // Third call is npx npm install - succeed
+        return '99.0.0\n';
       });
 
       await program.parseAsync(['node', 'test', 'update', '--cli-only']);
@@ -236,7 +241,11 @@ describe('Update Command Integration', () => {
       const fs = await import('fs');
 
       vi.mocked(fs.existsSync).mockReturnValue(false);
-      vi.mocked(execSync).mockImplementation(() => {
+      vi.mocked(execSync).mockImplementation((cmd: any) => {
+        const cmdStr = String(cmd);
+        // Version check returns higher version to trigger update
+        if (cmdStr.includes('npm view')) return '99.0.0\n';
+        // All install attempts fail
         throw new Error('update failed');
       });
 
