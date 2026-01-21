@@ -1,7 +1,6 @@
 # Ralph-dev
 
 Autonomous end-to-end development system integrated with Claude Code. Transforms natural language requirements into production-ready, tested code through a 5-phase workflow.
-> 与 Claude Code 集成的自主端到端开发系统。通过 5 阶段工作流将自然语言需求转换为生产就绪的测试代码。
 
 ## Architecture
 
@@ -13,6 +12,42 @@ Clarify → Breakdown → Implement ⇄ Heal → Deliver
 - **CLI**: TypeScript 5.3+ with Commander.js (`cli/`)
 - **Skills**: AI agent workflows for each phase (`skills/`)
 - **Plugin**: Claude Code plugin configuration (`.claude-plugin/`)
+
+## Operating Philosophy
+
+**Occam's Razor**: Do not multiply entities beyond necessity. Be concise, substantive, and evidence-based.
+
+**Global Rules Enforcement**: Strictly follow all rules in `~/.claude/CLAUDE.md`, including:
+- Bilingual output (English first + Chinese translation)
+- Echo Confirmation Mechanism for Chinese requests
+
+**Service Standard**: Linus Torvalds-level code quality expectations. No compromise.
+
+**Ultrathink Mode**: Deep analysis of architecture, edge cases, and root causes. No surface-level responses.
+
+## Efficient Agent Usage
+
+**Default Delegation** - Prefer sub-agents over main context:
+
+| Context | Action |
+|---------|--------|
+| Main session | Task understanding, coordination, result summary |
+| Sub-agent | Code exploration, implementation, complex operations |
+| Token budget | Avoid large searches/reads in main context |
+
+**Direct Execution** - Only for simple operations:
+- Single file read (known path)
+- Simple edits (1-2 changes)
+- Single command (`git status`, `npm install`)
+- Q&A without code exploration
+
+**Parallel Execution**: Launch multiple independent agents in a single message.
+
+**Escalation Strategy**: After 3+ failed attempts, delegate to Codex Agent:
+
+```bash
+codex exec "<problem summary with context and failed approaches>"
+```
 
 ## Quick Reference
 
@@ -61,17 +96,14 @@ For CLI-specific implementation details, see:
 
 ## CLI Release Process
 
-When user says "发布 cli release" or "publish cli release", execute the following steps automatically:
-> 当用户说"发布 cli release"时，自动执行以下步骤：
+When user says "publish cli release", execute the following steps automatically:
 
 ### Version Files (MUST Keep in Sync)
-> 版本文件（必须保持同步）
 
 When releasing a new version, **ALL** of the following files must be updated:
-> 发布新版本时，必须更新以下**所有**文件：
 
 | File | Field(s) to Update |
-|------|-------------------|
+|---------|--------|
 | `cli/package.json` | `version` (source of truth) |
 | `.claude-plugin/plugin.json` | `version` |
 | `.claude-plugin/marketplace.json` | `version`, `metadata.version`, `plugins[0].version` |
@@ -126,11 +158,11 @@ Configure on [npmjs.com](https://www.npmjs.com) → Package Settings → Publish
 ### Version Guidelines
 
 | Type | When to Use | Example |
-|------|-------------|---------|
+|---------|--------|--------|
 | `patch` | Bug fixes, minor updates | 0.2.0 → 0.2.1 |
 | `minor` | New features, backwards compatible | 0.2.0 → 0.3.0 |
 | `major` | Breaking changes | 0.2.0 → 1.0.0 |
 
 ---
 
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-21
