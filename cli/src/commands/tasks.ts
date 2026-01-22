@@ -111,6 +111,7 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
     .option('--project-goal <goal>', 'Project goal description')
     .option('--language <language>', 'Programming language')
     .option('--framework <framework>', 'Framework name')
+    .option('--json', 'Output as JSON')
     .action(async (options) => {
       const index = await indexRepository.read();
 
@@ -126,8 +127,18 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
       }
 
       await indexRepository.write(index);
-      console.log(chalk.green('✅ Tasks system initialized'));
-      console.log(chalk.gray(`   Location: ${tasksDir}/index.json`));
+
+      const response = successResponse({
+        initialized: true,
+        location: `${tasksDir}/index.json`,
+        metadata: index.metadata,
+      });
+
+      outputResponse(response, options.json, (data) => {
+        console.log(chalk.green('✅ Tasks system initialized'));
+        console.log(chalk.gray(`   Location: ${data.location}`));
+      });
+
       process.exit(ExitCode.SUCCESS);
     });
 
@@ -143,11 +154,12 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
     .option('--criteria <criteria...>', 'Acceptance criteria (can specify multiple)')
     .option('--dependencies <deps...>', 'Task dependencies')
     .option('--test-pattern <pattern>', 'Test file pattern')
+    .option('--json', 'Output as JSON')
     .action(async (taskId, options) => {
       // Resolve task ID: positional argument takes precedence over --id option
       const resolvedId = taskId || options.id;
       if (!resolvedId) {
-        handleError(Errors.invalidInput('Task ID is required. Provide as positional argument or use --id'), false);
+        handleError(Errors.invalidInput('Task ID is required. Provide as positional argument or use --id'), options.json);
         return;
       }
 
@@ -164,15 +176,24 @@ export function registerTaskCommands(program: Command, workspaceDir: string): vo
           testPattern: options.testPattern,
         });
 
-        // Format output
-        console.log(chalk.green(`✅ Task ${task.id} created`));
-        console.log(chalk.gray(`   Module: ${task.module}`));
-        console.log(chalk.gray(`   Priority: ${task.priority}`));
-        console.log(chalk.gray(`   Estimated: ${task.estimatedMinutes} min`));
+        const response = successResponse({
+          taskId: task.id,
+          module: task.module,
+          priority: task.priority,
+          estimatedMinutes: task.estimatedMinutes,
+          status: task.status,
+        });
+
+        outputResponse(response, options.json, (data) => {
+          console.log(chalk.green(`✅ Task ${data.taskId} created`));
+          console.log(chalk.gray(`   Module: ${data.module}`));
+          console.log(chalk.gray(`   Priority: ${data.priority}`));
+          console.log(chalk.gray(`   Estimated: ${data.estimatedMinutes} min`));
+        });
 
         process.exit(ExitCode.SUCCESS);
       } catch (error) {
-        handleError(error as any, false);
+        handleError(error as any, options.json);
       }
     });
 
